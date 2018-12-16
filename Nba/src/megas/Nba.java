@@ -15,6 +15,7 @@ import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.NXTLightSensor;
+import lejos.robotics.LightDetectorAdaptor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.chassis.Chassis;
 import lejos.robotics.chassis.Wheel;
@@ -31,19 +32,32 @@ public class Nba {
 		
 	public static final double TURN_RIGHT_ANGLE = 75.0;
 	public static final double TURN_LEFT_ANGLE = 75.0;
-	public static final int GRASP_ANGLE = 50;
-	public static final int RELEASE_ANGLE = -50;
+	public static final int GRASP_ANGLE = -120;
+	public static final int RELEASE_ANGLE = 120;
 	
+	
+	// =================================================================
+	// ========================== DISTANCES ============================
+	// =================================================================
+	public static final int HALF_BLOCK = 12;
+	
+	// =================================================================
+	// ========================== THRESHOLDS ===========================
+	// =================================================================			
+	public static final double BLUE_BALL_THRESHOLD = 0.37;
 	
 	
 	
 	// =================================================================
 	// ======================== PILOT PROPS ============================
 	// =================================================================
-	
 	public static final int LINEAR_SPEED = 5;
 	public static final int ANGULAR_SPEED = 25;
 
+	// =================================================================
+	// ========================== ENUMS ================================
+	// =================================================================		
+	public static final int NXT_RED_MODE = 0;
 	
 	
 	
@@ -55,6 +69,9 @@ public class Nba {
 	static EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
 	static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S3);
 	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
+	
+	static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
+	
 	
 	static MovePilot pilot;
 	
@@ -105,6 +122,11 @@ public class Nba {
     	pilot.setAngularSpeed(ANGULAR_SPEED);
     	pilot.stop();
 		
+    	// =================================================================
+    	// ====================== SENSOR SETTINGS ==========================
+    	// =================================================================
+    	nxtLightSensor.setCurrentMode(NXT_RED_MODE);
+    	
 		// ServerSocket serverSocket = new ServerSocket(1234);
 		
 		graphicsLCD.clear();
@@ -123,14 +145,34 @@ public class Nba {
 		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		
 		while (Button.readButtons() != Button.ID_ESCAPE) {
-
-			middleMotor.rotate(GRASP_ANGLE);
-			middleMotor.rotate(RELEASE_ANGLE);
+			determineBallColor(graphicsLCD);
 			Delay.msDelay(500);
 		}
-		
+		/*
+		middleMotor.rotate(RELEASE_ANGLE);
+		middleMotor.stop();
+		pilot.travel(HALF_BLOCK);
+		middleMotor.rotate(GRASP_ANGLE);
+		middleMotor.stop();
+		determineBallColor(graphicsLCD);
+		pilot.travel(-HALF_BLOCK);
+		*/
 		// dataOutputStream.close();
 		// serverSocket.close();
+	}
+	
+	public static void determineBallColor(GraphicsLCD graphicsLCD) {
+		nxtLightSensor.setCurrentMode(NXT_RED_MODE);
+		double reading = nxtLightDetectorAdaptor.getLightValue();
+		if (reading < BLUE_BALL_THRESHOLD) {
+			graphicsLCD.clear();
+			graphicsLCD.drawString("BLUE BALL" + reading, graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+			graphicsLCD.refresh();
+		} else {
+			graphicsLCD.clear();
+			graphicsLCD.drawString("RED BALL" + reading, graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+			graphicsLCD.refresh();
+		}
 	}
 	
 	public static void turnRight() {
