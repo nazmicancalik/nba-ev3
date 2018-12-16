@@ -22,10 +22,17 @@ import lejos.utility.PilotProps;
 
 public class Nba {
 	
-	public static final double TRAVEL_CHUNK = 4.0;
+	// =================================================================
+	// ========================== ANGLES ===============================
+	// =================================================================
+		
 	public static final double TURN_RIGHT_ANGLE = 75.0;
-	public static final double STEP_TURN_ANGLE = 5.0;
-	public static final int ONE_SIDE_TRAVEL_COUNT = (int) (100/TRAVEL_CHUNK);
+	public static final double TURN_LEFT_ANGLE = 75.0;
+	
+	
+	// =================================================================
+	// ======================== PILOT PROPS ============================
+	// =================================================================
 	
 	public static final int LINEAR_SPEED = 5;
 	public static final int ANGULAR_SPEED = 25;
@@ -37,6 +44,10 @@ public class Nba {
 	
 	static MovePilot pilot;
 	
+	/**
+	 * Gets the ultrasonic value
+	 * @return ultrasonic_reading
+	 */
 	static float getUltrasonicSensorValue() {
 		SampleProvider sampleProvider = ultrasonicSensor.getDistanceMode();
 		if(sampleProvider.sampleSize() > 0) {
@@ -52,7 +63,7 @@ public class Nba {
 		GraphicsLCD graphicsLCD = ev3.getGraphicsLCD();
 		
 		graphicsLCD.clear();
-		graphicsLCD.drawString("Map Making", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		
 		PilotProps pilotProps = new PilotProps();
 		pilotProps.setProperty(PilotProps.KEY_WHEELDIAMETER, "4.96");
@@ -79,68 +90,37 @@ public class Nba {
     	pilot.setAngularSpeed(ANGULAR_SPEED);
     	pilot.stop();
 		
-		ServerSocket serverSocket = new ServerSocket(1234);
+		// ServerSocket serverSocket = new ServerSocket(1234);
 		
 		graphicsLCD.clear();
-		graphicsLCD.drawString("Map Making", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Waiting", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		
-		Socket client = serverSocket.accept();
+		// Socket client = serverSocket.accept();
 		
 		graphicsLCD.clear();
-		graphicsLCD.drawString("Map Making", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Connected", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
         
-		OutputStream outputStream = client.getOutputStream();
-		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-		int currentSide = 0;
-		int position = 0;
+		// OutputStream outputStream = client.getOutputStream();
+		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+		
 		while (Button.readButtons() != Button.ID_ESCAPE) {
-			
-			for (int i = 0; i < 4; i++) {
-				
-				// Update Current Side
-				currentSide = i;
-				position = 0;
-				
-				for(int j = 0; j < ONE_SIDE_TRAVEL_COUNT; j++) {
-					pilot.travel(TRAVEL_CHUNK);	
-					
-					// Update position
-					position = (int) (TRAVEL_CHUNK * j);
-					
-					dataOutputStream.writeInt(currentSide);
-					dataOutputStream.writeInt(position);
-					dataOutputStream.writeFloat(getUltrasonicSensorValue());
-					dataOutputStream.flush();
-				}
-				turnRight();
-			}
-			
-			
+
 			Delay.msDelay(500);
 		}
 		
-		dataOutputStream.close();
-		serverSocket.close();
+		// dataOutputStream.close();
+		// serverSocket.close();
 	}
 	
 	public static void turnRight() {
-		/*gyroSensor.reset();
-		float currentAngle = getAngle();
-		while (Math.abs(currentAngle)< TURN_RIGHT_ANGLE) {
-			pilot.rotate(STEP_TURN_ANGLE);
-			currentAngle = getAngle();
-		}*/
 		pilot.rotate(TURN_RIGHT_ANGLE);
 	}
-	/*
-	public static float getAngle() {
-		SampleProvider sampleProvider = gyroSensor.getAngleMode();
-		float[] sample = new float[sampleProvider.sampleSize()];
-		sampleProvider.fetchSample(sample, 0);
-		return sample[0];
-	}*/
+	
+	public static void turnLeft() {
+		pilot.rotate(TURN_LEFT_ANGLE);
+	}
 }
