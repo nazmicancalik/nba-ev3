@@ -9,9 +9,12 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.EV3;
 import lejos.hardware.lcd.GraphicsLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.sensor.NXTLightSensor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.chassis.Chassis;
 import lejos.robotics.chassis.Wheel;
@@ -28,6 +31,10 @@ public class Nba {
 		
 	public static final double TURN_RIGHT_ANGLE = 75.0;
 	public static final double TURN_LEFT_ANGLE = 75.0;
+	public static final int GRASP_ANGLE = 50;
+	public static final int RELEASE_ANGLE = -50;
+	
+	
 	
 	
 	// =================================================================
@@ -38,9 +45,16 @@ public class Nba {
 	public static final int ANGULAR_SPEED = 25;
 
 	
+	
+	
 	static EV3 ev3 = (EV3) BrickFinder.getDefault();
 	
+	// =================================================================
+	// ========================== SENSORS ==============================
+	// =================================================================
 	static EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
+	static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S3);
+	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
 	
 	static MovePilot pilot;
 	
@@ -76,6 +90,7 @@ public class Nba {
     	
     	EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
+    	EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.B);
     	
     	float leftWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.72"));
     	float rightWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.28"));
@@ -109,6 +124,8 @@ public class Nba {
 		
 		while (Button.readButtons() != Button.ID_ESCAPE) {
 
+			middleMotor.rotate(GRASP_ANGLE);
+			middleMotor.rotate(RELEASE_ANGLE);
 			Delay.msDelay(500);
 		}
 		
