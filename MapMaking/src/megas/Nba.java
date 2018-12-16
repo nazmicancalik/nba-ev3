@@ -20,7 +20,7 @@ import lejos.robotics.navigation.MovePilot;
 import lejos.utility.Delay;
 import lejos.utility.PilotProps;
 
-public class MapMaking {
+public class Nba {
 	
 	public static final double TRAVEL_CHUNK = 4.0;
 	public static final double TURN_RIGHT_ANGLE = 75.0;

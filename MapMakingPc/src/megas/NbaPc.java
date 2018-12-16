@@ -20,7 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class MapMakingPc extends JFrame {
+public class NbaPc extends JFrame {
 	
 	
 	// ========================= MAP DATA ==============================
@@ -53,7 +53,7 @@ public class MapMakingPc extends JFrame {
 	static int position = 0;
 	static float distance = 0;
 
-	public MapMakingPc() {
+	public NbaPc() {
 		super("Map Making");
 		setSize( 700, 500 );
 		
@@ -65,7 +65,7 @@ public class MapMakingPc extends JFrame {
 	
 	public static void main(String[] args) throws Exception	{
 		
-		MapMakingPc monitor = new MapMakingPc();
+		NbaPc monitor = new NbaPc();
 		
 		monitor.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		
