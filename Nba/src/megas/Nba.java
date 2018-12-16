@@ -15,6 +15,7 @@ import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.NXTLightSensor;
+import lejos.hardware.sensor.SensorMode;
 import lejos.robotics.LightDetectorAdaptor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.chassis.Chassis;
@@ -71,8 +72,8 @@ public class Nba {
 	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
 	
 	static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
-	
-	
+; 
+
 	static MovePilot pilot;
 	
 	/**
@@ -125,8 +126,11 @@ public class Nba {
     	// =================================================================
     	// ====================== SENSOR SETTINGS ==========================
     	// =================================================================
-    	nxtLightSensor.setCurrentMode(NXT_RED_MODE);
-    	
+    	nxtLightSensor.setCurrentMode("Red");
+    	nxtLightSensor.setFloodlight(NXT_RED_MODE);
+    	nxtLightSensor.setFloodlight(true);
+    	nxtLightDetectorAdaptor.setReflected(true);
+
 		// ServerSocket serverSocket = new ServerSocket(1234);
 		
 		graphicsLCD.clear();
@@ -144,33 +148,31 @@ public class Nba {
 		// OutputStream outputStream = client.getOutputStream();
 		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		
-		while (Button.readButtons() != Button.ID_ESCAPE) {
-			determineBallColor(graphicsLCD);
-			Delay.msDelay(500);
-		}
-		/*
+		
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
 		pilot.travel(HALF_BLOCK);
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
 		determineBallColor(graphicsLCD);
+		
+		// Turn back
 		pilot.travel(-HALF_BLOCK);
-		*/
+		
 		// dataOutputStream.close();
 		// serverSocket.close();
 	}
 	
 	public static void determineBallColor(GraphicsLCD graphicsLCD) {
-		nxtLightSensor.setCurrentMode(NXT_RED_MODE);
+		
 		double reading = nxtLightDetectorAdaptor.getLightValue();
 		if (reading < BLUE_BALL_THRESHOLD) {
 			graphicsLCD.clear();
-			graphicsLCD.drawString("BLUE BALL" + reading, graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+			graphicsLCD.drawString("BLUE BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 			graphicsLCD.refresh();
 		} else {
 			graphicsLCD.clear();
-			graphicsLCD.drawString("RED BALL" + reading, graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+			graphicsLCD.drawString("RED BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 			graphicsLCD.refresh();
 		}
 	}
