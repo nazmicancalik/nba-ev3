@@ -46,8 +46,7 @@ public class Nba {
 	
 	// =================================================================
 	// ========================== THRESHOLDS ===========================
-	// =================================================================			
-	public static final double BLUE_BALL_THRESHOLD = 0.37;
+	// =================================================================
 
 	// =================================================================
 	// ======================== PILOT PROPS ============================
@@ -79,12 +78,11 @@ public class Nba {
 	// ========================== SENSORS ==============================
 	// =================================================================
 	static EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
-	static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S2);
+	// static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S2);
 	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
 	
 	static ColorAdapter ev3ColorAdapter = new ColorAdapter(ev3ColorSensor);
-	static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
-; 
+	// static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
 
 	static MovePilot pilot;
 	
@@ -105,6 +103,9 @@ public class Nba {
 	public static void main(String[] args) throws Exception {		
 		EV3 ev3 = (EV3) BrickFinder.getDefault();
 		GraphicsLCD graphicsLCD = ev3.getGraphicsLCD();
+		
+		Utils utils = new Utils();
+		Map map = new Map();
 		
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
@@ -136,14 +137,6 @@ public class Nba {
     	pilot.setAngularSpeed(ANGULAR_SPEED);
     	pilot.stop();
 		
-    	// =================================================================
-    	// ====================== SENSOR SETTINGS ==========================
-    	// =================================================================
-    	nxtLightSensor.setCurrentMode("Red");
-    	nxtLightSensor.setFloodlight(NXT_RED_MODE);
-    	nxtLightSensor.setFloodlight(true);
-    	nxtLightDetectorAdaptor.setReflected(true);
-
 		// ServerSocket serverSocket = new ServerSocket(1234);
 		
 		graphicsLCD.clear();
@@ -160,7 +153,6 @@ public class Nba {
         
 		// OutputStream outputStream = client.getOutputStream();
 		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-		// sendCellData(ultrasonicSensorMotor);
 		
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
@@ -169,7 +161,7 @@ public class Nba {
 		pilot.travel(HALF_BLOCK);
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
-		determineBallColor(graphicsLCD);
+		utils.determineBallColor(graphicsLCD);
 		
 		// Turn back
 		pilot.travel(-HALF_BLOCK);
@@ -180,36 +172,23 @@ public class Nba {
 	
 	
 	public static void takeUltrasonicMeasurements(EV3LargeRegulatedMotor ultrasonicSensorMotor) {
-		float front_distance = getUltrasonicSensorValue();
+		float frontDistance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
 		
-		float right_distance = getUltrasonicSensorValue();
+		float rightDistance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
 		
-		float back_distance = getUltrasonicSensorValue();
+		float backDistance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(3*ULTRASONIC_ROTATE_LEFT);
 		
-		float left_distance = getUltrasonicSensorValue();
+		float leftDistance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
+		// Add values to the map.
+		
 		
 		Color color = ev3ColorAdapter.getColor();
 	}
-	
-	
-	public static void determineBallColor(GraphicsLCD graphicsLCD) {
-		
-		double reading = nxtLightDetectorAdaptor.getLightValue();
-		if (reading < BLUE_BALL_THRESHOLD) {
-			graphicsLCD.clear();
-			graphicsLCD.drawString("BLUE BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
-			graphicsLCD.refresh();
-		} else {
-			graphicsLCD.clear();
-			graphicsLCD.drawString("RED BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
-			graphicsLCD.refresh();
-		}
-	}
-	
 	
 	public static void turnRight() {
 		pilot.rotate(TURN_RIGHT_ANGLE);

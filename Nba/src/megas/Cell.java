@@ -4,7 +4,7 @@ public class Cell {
 	
 	public static final float WALL_DISTANCE_THRESHOLD = 25.0f;
 	
-	int colorId;
+	int colorId = -1;
 	
 	float frontDistance;
 	float rightDistance;
@@ -16,6 +16,7 @@ public class Cell {
 	boolean backWall = false;
 	boolean leftWall = false;
 	
+	public Cell() {}
 	
 	public Cell(int colorId, float[] ultrasonicReadings) {
 		
