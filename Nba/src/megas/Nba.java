@@ -1,5 +1,8 @@
 package megas;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -83,29 +86,21 @@ public class Nba {
 	
 	static ColorAdapter ev3ColorAdapter = new ColorAdapter(ev3ColorSensor);
 	// static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
-
+	
+	
+	// ====================================================================
+	// ======================= POSITION INFO ==============================
+	// ====================================================================
+	static int orientation = 0;
+	static int xPos = 3;
+	static int yPos = 3;
+	
 	static MovePilot pilot;
-	
-	/**
-	 * Gets the ultrasonic value
-	 * @return ultrasonic_reading
-	 */
-	static float getUltrasonicSensorValue() {
-		SampleProvider sampleProvider = ultrasonicSensor.getDistanceMode();
-		if(sampleProvider.sampleSize() > 0) {
-			float [] samples = new float[sampleProvider.sampleSize()];
-			sampleProvider.fetchSample(samples, 0);
-			return samples[0];
-		}
-		return -1;
-	}
-	
+	static GraphicsLCD graphicsLCD;
+
 	public static void main(String[] args) throws Exception {		
 		EV3 ev3 = (EV3) BrickFinder.getDefault();
-		GraphicsLCD graphicsLCD = ev3.getGraphicsLCD();
-		
-		Utils utils = new Utils();
-		Map map = new Map();
+		graphicsLCD = ev3.getGraphicsLCD();
 		
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
@@ -121,7 +116,6 @@ public class Nba {
     	
     	EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.B);
     	EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
-    	EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
     	EV3LargeRegulatedMotor ultrasonicSensorMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	
     	float leftWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.72"));
@@ -137,22 +131,63 @@ public class Nba {
     	pilot.setAngularSpeed(ANGULAR_SPEED);
     	pilot.stop();
 		
-		// ServerSocket serverSocket = new ServerSocket(1234);
+		ServerSocket serverSocket = new ServerSocket(1234);
 		
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Waiting", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		
-		// Socket client = serverSocket.accept();
+		Socket client = serverSocket.accept();
 		
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Connected", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
         
-		// OutputStream outputStream = client.getOutputStream();
-		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+		InputStream inputStream = client.getInputStream();
+		DataInputStream dataInputStream = new DataInputStream(inputStream);
+		
+		OutputStream outputStream = client.getOutputStream();
+		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+		
+		
+		explore(ultrasonicSensorMotor, dataOutputStream);
+		
+		
+		dataOutputStream.close();
+		serverSocket.close();
+	}
+	
+	
+	
+	public static void explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
+		float[] distances = new float[4];
+		
+		// Take the measurements
+		distances[(0 + orientation)%4] = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+
+		distances[(1 + orientation)%4] = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
+		distances[(2 + orientation)%4] = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
+		
+		distances[(3 + orientation)%4] = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
+		int colorId = ev3ColorAdapter.getColorID();
+		
+		Cell cell = new Cell(colorId, distances);
+		
+		// Send the cell data to draw the map
+		sendPositionData(dataOutputStream, cell);
+	}
+	
+	public static void grabTheBall(GraphicsLCD graphicsLCD) {
+		EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
+		Utils utils = new Utils();
 		
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
@@ -161,33 +196,31 @@ public class Nba {
 		pilot.travel(HALF_BLOCK);
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
+		
 		utils.determineBallColor(graphicsLCD);
-		
-		// Turn back
-		pilot.travel(-HALF_BLOCK);
-		
-		// dataOutputStream.close();
-		// serverSocket.close();
 	}
 	
+	public static void sendPositionData(DataOutputStream dataOutputStream, Cell currentCell) throws IOException {
+		dataOutputStream.writeInt(xPos);
+		dataOutputStream.writeInt(yPos);
+		
+		dataOutputStream.writeInt(orientation);
+		dataOutputStream.writeInt(currentCell.colorId);
+		
+		dataOutputStream.writeBoolean(currentCell.frontWall);
+		dataOutputStream.writeBoolean(currentCell.rightWall);
+		dataOutputStream.writeBoolean(currentCell.backWall);
+		dataOutputStream.writeBoolean(currentCell.leftWall);
+	}
 	
-	public static void takeUltrasonicMeasurements(EV3LargeRegulatedMotor ultrasonicSensorMotor) {
-		float frontDistance = getUltrasonicSensorValue();
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		
-		float rightDistance = getUltrasonicSensorValue();
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		
-		float backDistance = getUltrasonicSensorValue();
-		ultrasonicSensorMotor.rotate(3*ULTRASONIC_ROTATE_LEFT);
-		
-		float leftDistance = getUltrasonicSensorValue();
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		
-		// Add values to the map.
-		
-		
-		Color color = ev3ColorAdapter.getColor();
+	public static float getUltrasonicSensorValue() {
+		SampleProvider sampleProvider = ultrasonicSensor.getDistanceMode();
+		if(sampleProvider.sampleSize() > 0) {
+			float [] samples = new float[sampleProvider.sampleSize()];
+			sampleProvider.fetchSample(samples, 0);
+			return samples[0];
+		}
+		return -1;
 	}
 	
 	public static void turnRight() {
