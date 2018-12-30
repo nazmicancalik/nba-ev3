@@ -16,6 +16,8 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.NXTLightSensor;
 import lejos.hardware.sensor.SensorMode;
+import lejos.robotics.Color;
+import lejos.robotics.ColorAdapter;
 import lejos.robotics.LightDetectorAdaptor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.chassis.Chassis;
@@ -33,8 +35,8 @@ public class Nba {
 		
 	public static final double TURN_RIGHT_ANGLE = 75.0;
 	public static final double TURN_LEFT_ANGLE = 75.0;
-	public static final int GRASP_ANGLE = -120;
-	public static final int RELEASE_ANGLE = 120;
+	public static final int GRASP_ANGLE = 140;
+	public static final int RELEASE_ANGLE = -180;
 	
 	
 	// =================================================================
@@ -60,6 +62,17 @@ public class Nba {
 	// =================================================================		
 	public static final int NXT_RED_MODE = 0;
 	
+	// =================================================================
+	// ================== MIDDLE MOTOR SPEEDS ==========================
+	// =================================================================		
+	public static final int MIDDLE_MOTOR_SLOW_SPEED = 100;
+	public static final int MIDDLE_MOTOR_SPEED = 200;
+	
+	// =================================================================
+	// ============= ULTRASONIC NXT MOTOR ROTATIONS ====================
+	// =================================================================		
+	public static final int ULTRASONIC_ROTATE_RIGHT = 90;
+	public static final int ULTRASONIC_ROTATE_LEFT = -90;
 	
 	
 	static EV3 ev3 = (EV3) BrickFinder.getDefault();
@@ -68,9 +81,10 @@ public class Nba {
 	// ========================== SENSORS ==============================
 	// =================================================================
 	static EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
-	static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S3);
+	static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S2);
 	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
 	
+	static ColorAdapter ev3ColorAdapter = new ColorAdapter(ev3ColorSensor);
 	static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
 ; 
 
@@ -100,15 +114,16 @@ public class Nba {
 		PilotProps pilotProps = new PilotProps();
 		pilotProps.setProperty(PilotProps.KEY_WHEELDIAMETER, "4.96");
 		pilotProps.setProperty(PilotProps.KEY_TRACKWIDTH, "11.94");
-		pilotProps.setProperty(PilotProps.KEY_LEFTMOTOR, "A");
+		pilotProps.setProperty(PilotProps.KEY_LEFTMOTOR, "B");
 		pilotProps.setProperty(PilotProps.KEY_RIGHTMOTOR, "D");
 		pilotProps.setProperty(PilotProps.KEY_REVERSE, "false");
 		pilotProps.storePersistentValues();
 		pilotProps.loadPersistentValues();
     	
-    	EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.A);
+    	EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.B);
     	EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
-    	EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.B);
+    	EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
+    	EV3LargeRegulatedMotor ultrasonicSensorMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	
     	float leftWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.72"));
     	float rightWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.28"));
@@ -133,6 +148,8 @@ public class Nba {
 
 		// ServerSocket serverSocket = new ServerSocket(1234);
 		
+		
+    	
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Waiting", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
@@ -147,10 +164,12 @@ public class Nba {
         
 		// OutputStream outputStream = client.getOutputStream();
 		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+		sendCellData(ultrasonicSensorMotor);
 		
-		
+		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
+		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
 		pilot.travel(HALF_BLOCK);
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
@@ -161,6 +180,19 @@ public class Nba {
 		
 		// dataOutputStream.close();
 		// serverSocket.close();
+	}
+	
+	public static void sendCellData(EV3LargeRegulatedMotor ultrasonicSensorMotor) {
+		float front_distance = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		float right_distance = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		float back_distance = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(3*ULTRASONIC_ROTATE_LEFT);
+		float left_distance = getUltrasonicSensorValue();
+		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		Color color = ev3ColorAdapter.getColor();
+
 	}
 	
 	public static void determineBallColor(GraphicsLCD graphicsLCD) {
@@ -176,6 +208,7 @@ public class Nba {
 			graphicsLCD.refresh();
 		}
 	}
+	
 	
 	public static void turnRight() {
 		pilot.rotate(TURN_RIGHT_ANGLE);
