@@ -148,8 +148,6 @@ public class Nba {
 
 		// ServerSocket serverSocket = new ServerSocket(1234);
 		
-		
-    	
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.drawString("Waiting", graphicsLCD.getWidth()/2, 20, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
@@ -164,7 +162,7 @@ public class Nba {
         
 		// OutputStream outputStream = client.getOutputStream();
 		// DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-		sendCellData(ultrasonicSensorMotor);
+		// sendCellData(ultrasonicSensorMotor);
 		
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
@@ -182,18 +180,23 @@ public class Nba {
 		// serverSocket.close();
 	}
 	
-	public static void sendCellData(EV3LargeRegulatedMotor ultrasonicSensorMotor) {
+	
+	public static void takeUltrasonicMeasurements(EV3LargeRegulatedMotor ultrasonicSensorMotor) {
 		float front_distance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
 		float right_distance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
 		float back_distance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(3*ULTRASONIC_ROTATE_LEFT);
+		
 		float left_distance = getUltrasonicSensorValue();
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+		
 		Color color = ev3ColorAdapter.getColor();
-
 	}
+	
 	
 	public static void determineBallColor(GraphicsLCD graphicsLCD) {
 		
