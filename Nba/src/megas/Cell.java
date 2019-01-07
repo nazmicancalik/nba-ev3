@@ -6,11 +6,6 @@ public class Cell {
 	
 	int colorId = -1;
 	
-	float frontDistance;
-	float rightDistance;
-	float backDistance;
-	float leftDistance;
-	
 	boolean frontWall = false;
 	boolean rightWall = false;
 	boolean backWall = false;
@@ -18,23 +13,14 @@ public class Cell {
 	
 	public Cell() {}
 	
-	public Cell(int colorId, float[] ultrasonicReadings) {
+	public Cell(int colorId, boolean[] walls) {
 		
 		this.colorId = colorId;
 		
-		this.frontDistance = ultrasonicReadings[0];
-		this.rightDistance = ultrasonicReadings[1];
-		this.backDistance = ultrasonicReadings[2];
-		this.leftDistance = ultrasonicReadings[3];
+		this.frontWall = walls[0];
+		this.rightWall = walls[1];
+		this.backWall = walls[2];
+		this.leftWall = walls[3];
 
-		if (frontDistance < WALL_DISTANCE_THRESHOLD) {
-			frontWall = true;
-		} else if (rightDistance < WALL_DISTANCE_THRESHOLD) {
-			rightWall = true;
-		} else if(backDistance < WALL_DISTANCE_THRESHOLD) {
-			backWall = true;
-		} else if(leftDistance < WALL_DISTANCE_THRESHOLD) {
-			leftWall = true;
-		}
 	}
 }
