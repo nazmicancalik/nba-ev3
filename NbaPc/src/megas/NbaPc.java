@@ -31,22 +31,16 @@ public class NbaPc extends JFrame {
 	public static final int FRAME_WIDTH = 800;
 	public static final int FRAME_HEIGHT = 800;
 	
-	public static final int SQUARE_WIDTH = 300;
-	public static final int SQUARE_HEIGHT= SQUARE_WIDTH;
-	public static final int SQUARE_X = (FRAME_WIDTH / 2) - (SQUARE_WIDTH / 2);
-	public static final int SQUARE_Y = SQUARE_X;
+	public static final int CELL_WIDTH = 300;
+	public static final int MEGAS_WIDTH = 100;
 	
-	public static final int ENVIRONMENT_RECT_WIDTH = 10;
-	public static final int ENVIRONMENT_RECT_HEIGHT = 10;
-	
-	public static final int FACTOR = 1;
-	
-	public static final int SCALE_FACTOR = SQUARE_WIDTH / 100;
-
+	public static final Color MEGAS_COLOR = Color.ORANGE;
 	
 	// =================================================================
 	// ========================= POSITION INFO =========================
 	// =================================================================
+	static Map map;
+	
 	static int xPos = 3;
 	static int yPos = 3;
 	static int orientation = 0;
@@ -60,10 +54,12 @@ public class NbaPc extends JFrame {
 		super("Map Making");
 		setSize( 700, 500 );
 		
+		map = new Map();
+		
 		JPanel panel = new JPanel();
 
 		this.getContentPane().add(panel);
-		setVisible(true);	
+		setVisible(true);
 	}
 	
 	public static void main(String[] args) throws Exception	{
@@ -93,9 +89,6 @@ public class NbaPc extends JFrame {
 	}
 	
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
-		
-		boolean[] walls = new boolean[4];
-		
 		xPos = dataInputStream.readInt();
 		yPos = dataInputStream.readInt();
 		orientation = dataInputStream.readInt();
@@ -105,6 +98,13 @@ public class NbaPc extends JFrame {
 		boolean rightWall = dataInputStream.readBoolean();
 		boolean backWall = dataInputStream.readBoolean();
 		boolean leftWall = dataInputStream.readBoolean();
+		
+		boolean[] walls = { frontWall, rightWall, backWall, leftWall };
+		
+		Cell cell = new Cell(colorId, walls);
+		cell.isVisited = true;
+		map.addCell(cell, xPos, yPos);
+		
 		System.out.println("***********************");
 		System.out.println(xPos);
 		System.out.println(yPos);
@@ -115,6 +115,40 @@ public class NbaPc extends JFrame {
 		System.out.println(backWall);
 		System.out.println(leftWall);
 		System.out.println("***********************");		
+	}
+	
+	public void paint(Graphics g) {
+		super.paint(g);
+		displayMap(map, g);
+		displayMegas(xPos,yPos,g);
+	}
+
+	public void displayMap( Map map, Graphics g ){
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setStroke( new BasicStroke( 5.0f ));
+
+		for (int i = 0; i < map.getMap().length; i++ ){
+			for (int j = 0; j < map.getMap()[0].length; j++) {
+				// Draw a cell according to the cell data
+				
+				Cell currentCell = map.getCellAt(i, j);
+				
+				Color color = Color.WHITE;
+				// If the cell is visited then get the color from inside.
+				if (!currentCell.isVisited) {
+					color = new Color(map.getCellAt(i, j).colorId);	
+				}
+				g2.setColor(color);
+				g2.fillRect(i * CELL_WIDTH, j * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
+			}
+		}
+	}
+	
+	public void displayMegas(int xPos, int yPos, Graphics g ){
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setColor(MEGAS_COLOR);
+		// g2.setStroke( new BasicStroke( 5.0f ));
+		g2.fillRect(xPos * CELL_WIDTH, yPos * CELL_WIDTH, CELL_WIDTH, CELL_WIDTH);
 	}
 }
 
