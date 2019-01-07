@@ -29,6 +29,9 @@ import lejos.robotics.chassis.WheeledChassis;
 import lejos.robotics.navigation.MovePilot;
 import lejos.utility.Delay;
 import lejos.utility.PilotProps;
+import lejos.hardware.sensor.EV3GyroSensor;
+import lejos.robotics.SampleProvider;
+
 
 public class Nba {
 	
@@ -46,11 +49,14 @@ public class Nba {
 	// ========================== DISTANCES ============================
 	// =================================================================
 	public static final int HALF_BLOCK = 12;
+	public static final int FULL_BLOCK = 33;
+
 	
 	// =================================================================
 	// ========================== THRESHOLDS ===========================
 	// =================================================================
-
+	public static final int ANGLE_CORRECTION_THRESHOLD = 1;
+	
 	// =================================================================
 	// ======================== PILOT PROPS ============================
 	// =================================================================
@@ -73,8 +79,15 @@ public class Nba {
 	// =================================================================		
 	public static final int ULTRASONIC_ROTATE_RIGHT = 90;
 	public static final int ULTRASONIC_ROTATE_LEFT = -90;
+	public static final int MEASUREMENT_NUMBER = 4;
+	public static final float WALL_DISTANCE = 35.0f;
 	
-	
+	// =================================================================
+	// ==================== GYRO ROTATING ANGLEs =======================
+	// =================================================================	
+	public static final float RIGHT_ROTATE_GYRO_ANGLE = 90.0f;
+	public static final float LEFT_ROTATE_GYRO_ANGLE = -90.0f;
+
 	static EV3 ev3 = (EV3) BrickFinder.getDefault();
 	
 	// =================================================================
@@ -83,7 +96,8 @@ public class Nba {
 	static EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
 	// static NXTLightSensor nxtLightSensor = new NXTLightSensor(SensorPort.S2);
 	static EV3ColorSensor ev3ColorSensor = new EV3ColorSensor(SensorPort.S4);
-	
+	static EV3GyroSensor gyroSensor = new EV3GyroSensor(SensorPort.S3);
+
 	static ColorAdapter ev3ColorAdapter = new ColorAdapter(ev3ColorSensor);
 	// static LightDetectorAdaptor nxtLightDetectorAdaptor = new LightDetectorAdaptor((SampleProvider)nxtLightSensor);
 	
@@ -162,24 +176,74 @@ public class Nba {
 	
 	
 	public static void explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
-		float[] distances = new float[4];
+		boolean[] walls = new boolean[4];
 		
 		// Take the measurements
-		distances[(0 + orientation)%4] = getUltrasonicSensorValue();
+		// Front
+		int wall_readings = 0;
+		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+			float measurement = getUltrasonicSensorValue();
+			if (measurement < WALL_DISTANCE) {
+				wall_readings++;
+			}
+		}
+		if (wall_readings > 1) {
+			walls[(0 + orientation)%4] = true;
+		}
+		else {
+			walls[(0 + orientation)%4] = false;
+		}
+		wall_readings = 0;
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-
-		distances[(1 + orientation)%4] = getUltrasonicSensorValue();
+		// Right
+		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+			float measurement = getUltrasonicSensorValue();
+			if (measurement < WALL_DISTANCE) {
+				wall_readings++;
+			}
+		}
+		if (wall_readings > 1) {
+			walls[(1 + orientation)%4] = true;
+		}
+		else {
+			walls[(1 + orientation)%4] = false;
+		}
+		wall_readings = 0;
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		
-		distances[(2 + orientation)%4] = getUltrasonicSensorValue();
+		// Back
+		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+			float measurement = getUltrasonicSensorValue();
+			if (measurement < WALL_DISTANCE) {
+				wall_readings++;
+			}
+		}
+		if (wall_readings > 1) {
+			walls[(2 + orientation)%4] = true;
+		}
+		else {
+			walls[(2 + orientation)%4] = false;
+		}
+		wall_readings = 0;
 		ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
-		
-		distances[(3 + orientation)%4] = getUltrasonicSensorValue();
+		// Left
+		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+			float measurement = getUltrasonicSensorValue();
+			if (measurement < WALL_DISTANCE) {
+				wall_readings++;
+			}
+		}
+		if (wall_readings > 1) {
+			walls[(3 + orientation)%4] = true;
+		}
+		else {
+			walls[(3 + orientation)%4] = false;
+		}
+		wall_readings = 0;
 		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
 		
 		int colorId = ev3ColorAdapter.getColorID();
 		
-		Cell cell = new Cell(colorId, distances);
+		Cell cell = new Cell(colorId, walls);
 		
 		// Send the cell data to draw the map
 		sendPositionData(dataOutputStream, cell);
@@ -224,10 +288,43 @@ public class Nba {
 	}
 	
 	public static void turnRight() {
+		gyroSensor.reset();
 		pilot.rotate(TURN_RIGHT_ANGLE);
+		float gyro_value = getGyroSensorValue();
+		if(gyro_value > RIGHT_ROTATE_GYRO_ANGLE + 1) {
+			pilot.rotate(RIGHT_ROTATE_GYRO_ANGLE - gyro_value);
+		}else if (gyro_value < RIGHT_ROTATE_GYRO_ANGLE - 1) {
+			pilot.rotate(RIGHT_ROTATE_GYRO_ANGLE - gyro_value);
+		}
 	}
 	
 	public static void turnLeft() {
+		gyroSensor.reset();
 		pilot.rotate(TURN_LEFT_ANGLE);
+		float gyro_value = getGyroSensorValue();
+		if(gyro_value > LEFT_ROTATE_GYRO_ANGLE + 1) {
+			pilot.rotate(LEFT_ROTATE_GYRO_ANGLE - gyro_value);
+		}else if (gyro_value < LEFT_ROTATE_GYRO_ANGLE - 1) {
+			pilot.rotate(LEFT_ROTATE_GYRO_ANGLE - gyro_value);
+		}
 	}
+	
+	public static void goForward(int distance) {
+		gyroSensor.reset();
+		pilot.travel(distance);
+		float gyro_value = getGyroSensorValue();
+		if (Math.abs(gyro_value)>ANGLE_CORRECTION_THRESHOLD) {
+			pilot.rotate(-gyro_value);
+		}
+	}
+	
+	public static float getGyroSensorValue() {
+	    SampleProvider sampleProvider = gyroSensor.getAngleAndRateMode();
+	    while(sampleProvider.sampleSize() == 0);
+		float [] sample = new float[sampleProvider.sampleSize()];
+    	sampleProvider.fetchSample(sample, 0);
+    	float angle = sample[0];
+    	return angle;
+	}
+	
 }
