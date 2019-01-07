@@ -52,7 +52,7 @@ public class NbaPc extends JFrame {
 
 	public NbaPc() {
 		super("Map Making");
-		setSize( 700, 500 );
+		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		
 		map = new Map();
 		
