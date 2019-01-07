@@ -86,6 +86,7 @@ public class NbaPc extends JFrame {
 		
 		while(true){
 			// Show the walls
+			receivePositionInfo(dataInputStream);
 			monitor.repaint();
 			dataOutputStream.flush();
 		}
@@ -98,24 +99,22 @@ public class NbaPc extends JFrame {
 		xPos = dataInputStream.readInt();
 		yPos = dataInputStream.readInt();
 		orientation = dataInputStream.readInt();
-		cell.colorId = dataInputStream.readInt();
+		int colorId = dataInputStream.readInt();
 		
-		// Front
-		distances[0] = dataInputStream.readFloat(); 
-		// Right
-		distances[1] = dataInputStream.readFloat();
-		// Back
-		distances[2] = dataInputStream.readFloat();
-		// Left
-		distances[3] = dataInputStream.readFloat();
-		
-		// Calibrate the directions according to orientation.
-		cell.frontDistance = distances[(0 + orientation) % 4];
-		cell.rightDistance = distances[(1 + orientation) % 4];
-		cell.backDistance = distances[(2 + orientation) % 4];
-		cell.leftDistance = distances[(3 + orientation) % 4];
-		
-		return cell;
+		boolean frontWall = dataInputStream.readBoolean();
+		boolean rightWall = dataInputStream.readBoolean();
+		boolean backWall = dataInputStream.readBoolean();
+		boolean leftWall = dataInputStream.readBoolean();
+		System.out.println("***********************");
+		System.out.println(xPos);
+		System.out.println(yPos);
+		System.out.println(orientation);
+		System.out.println(colorId);
+		System.out.println(frontWall);
+		System.out.println(rightWall);
+		System.out.println(backWall);
+		System.out.println(leftWall);
+		System.out.println("***********************");		
 	}
 }
 
