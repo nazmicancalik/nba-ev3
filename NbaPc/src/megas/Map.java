@@ -26,6 +26,7 @@ public class Map {
 	
 	// Fills the map with empty cells
 	private void initializeMap() {
+		System.out.println("Map is initializing..");
 		for(int i = 0; i< MAP_WIDTH; i++) {
 			for(int j = 0; j<MAP_WIDTH; j++) {
 				Cell cell = new Cell();
