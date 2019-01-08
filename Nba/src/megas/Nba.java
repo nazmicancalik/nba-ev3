@@ -185,13 +185,14 @@ public class Nba {
 		Button.waitForAnyPress();
 		
 		
-		/*
+		
 		// ============ MAP MAKING ============ 
 		Map map = new Map();
-		System.out.println(map.toString());
-		map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		current_mod = MAPPING_MODE;
 		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		System.out.println(map.toString());
+		map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		map.writeObjectToFile(filepath);
 		System.out.println(map.toString());
 		
@@ -199,13 +200,14 @@ public class Nba {
 		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
+	
 		
-		*/
 		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
-		Map map = new Map();
+		//Map map = new Map();
 		dataOutputStream.writeInt(current_mod);
-		map.ReadObjectFromFile(filepath);
+		dataOutputStream.flush();
+		map = map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
 		sendMap(dataOutputStream, map);
 		graphicsLCD.clear();
@@ -308,17 +310,25 @@ public class Nba {
 	}
 	
 	public static void sendPositionData(DataOutputStream dataOutputStream, Cell currentCell) throws IOException {
+		
 		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
 		dataOutputStream.writeInt(xPos);
+		dataOutputStream.flush();
 		dataOutputStream.writeInt(yPos);
-		
+		dataOutputStream.flush();		
 		dataOutputStream.writeInt(orientation);
+		dataOutputStream.flush();
 		dataOutputStream.writeInt(currentCell.colorId);
-		
+		dataOutputStream.flush();
 		dataOutputStream.writeBoolean(currentCell.frontWall);
+		dataOutputStream.flush();
 		dataOutputStream.writeBoolean(currentCell.rightWall);
+		dataOutputStream.flush();
 		dataOutputStream.writeBoolean(currentCell.backWall);
+		dataOutputStream.flush();
 		dataOutputStream.writeBoolean(currentCell.leftWall);
+		dataOutputStream.flush();
 
 	}
 	
@@ -659,21 +669,32 @@ public class Nba {
 	
 	private static void sendMap(DataOutputStream dataOutputStream, Map map) throws IOException {
 		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
 		for(int i = 0; i< map.MAP_WIDTH; i++) {
 			for(int j = 0; j<map.MAP_WIDTH; j++) {
 				Cell current_cell = map.getCellAt(i, j);
 				dataOutputStream.writeInt(i); //x
+				dataOutputStream.flush();
 				dataOutputStream.writeInt(j); //y
+				dataOutputStream.flush();
 				dataOutputStream.writeInt(current_cell.colorId); // COLOR
+				dataOutputStream.flush();
 				dataOutputStream.writeBoolean(current_cell.frontWall); // Front Wall
+				dataOutputStream.flush();
 				dataOutputStream.writeBoolean(current_cell.rightWall); // Right Wall
+				dataOutputStream.flush();
 				dataOutputStream.writeBoolean(current_cell.backWall); // Back Wall
+				dataOutputStream.flush();
 				dataOutputStream.writeBoolean(current_cell.leftWall); // Left Wall
+				dataOutputStream.flush();
+
 				if((i == map.MAP_WIDTH -1) &&(j ==map.MAP_WIDTH)) {
 					dataOutputStream.writeBoolean(false); // Not Ended
 				}else {
 					dataOutputStream.writeBoolean(true); // Ended
 				}
+				dataOutputStream.flush();
+
 				
 			}
 		}
@@ -683,20 +704,24 @@ public class Nba {
 
 	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) throws IOException {
 		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
 		System.out.println("PARTICLES ARE SENT");
 		ListIterator<int[]> iterator = particles.listIterator();
 		while(iterator.hasNext()) {
 			int[] current_particle = iterator.next();
 			dataOutputStream.writeInt(current_particle[0]); //x
+			dataOutputStream.flush();
 			dataOutputStream.writeInt(current_particle[1]); //y
+			dataOutputStream.flush();
 			dataOutputStream.writeInt(current_particle[2]); //orientation
+			dataOutputStream.flush();
 			if(iterator.hasNext()) {
 				dataOutputStream.writeBoolean(false); //not ended
 			}
 			else {
 				dataOutputStream.writeBoolean(true); //ended
-
 			}
+			dataOutputStream.flush();
 		}		
 	}
 

@@ -90,6 +90,9 @@ public class NbaPc extends JFrame {
 		dataInputStream = new DataInputStream(inputStream);
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		
+		current_mod = dataInputStream.readInt();
+		System.out.println("Current Mode " + current_mod);
+
 		while(current_mod == MAPPING_MODE){
 			receivePositionInfo(dataInputStream);
 			monitor.repaint();
@@ -116,7 +119,7 @@ public class NbaPc extends JFrame {
 		
 		current_mod = dataInputStream.readInt();
 	
-		if (current_mod != MAPPING_MODE) {
+		if (current_mod != LOCALIZATION_MODE) {
 			return;
 		}
 	
@@ -183,23 +186,34 @@ public class NbaPc extends JFrame {
 	}
 	
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
-		
+		System.out.println("---------- receivePositionInfo ---------");
+
 		current_mod = dataInputStream.readInt();
-		System.out.println("Current Mode" + current_mod);
+		System.out.println("Current Mode " + current_mod);
 		if (current_mod !=0) {
 			return;
 		}
 		xPos = dataInputStream.readInt();
+		System.out.println("xPos " + xPos);
 		yPos = dataInputStream.readInt();
+		System.out.println("yPos " + yPos);
+
 		orientation = dataInputStream.readInt();
+		System.out.println("orientation " + orientation);
 		int colorId = dataInputStream.readInt();
-		
+		System.out.println("colorId " + colorId);
+
 		boolean frontWall = dataInputStream.readBoolean();
+		System.out.println("frontWall " + frontWall);
 		boolean rightWall = dataInputStream.readBoolean();
+		System.out.println("rightWall " + rightWall);
 		boolean backWall = dataInputStream.readBoolean();
+		System.out.println("backWall " + backWall);
 		boolean leftWall = dataInputStream.readBoolean();
+		System.out.println("leftWall " + leftWall);
 		boolean[] walls = { frontWall, rightWall, backWall, leftWall };
-		
+		System.out.println("----------------------------------------");
+
 		Cell cell = new Cell(colorId, walls);
 		cell.isVisited = true;
 		map.addCell(cell, xPos, yPos);
