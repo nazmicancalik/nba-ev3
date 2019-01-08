@@ -118,8 +118,14 @@ public class Nba {
 	static int xPos = 3;
 	static int yPos = 3;
 	
-	static int current_mod = 0; // mapping
 	private static final String filepath="./map_file";
+
+	
+	public static final int MAPPING_MODE = 0;
+	public static final int LOCALIZATION_MODE = 1;
+	
+	static int current_mod = MAPPING_MODE; // mapping
+
 
 	static MovePilot pilot;
 	static GraphicsLCD graphicsLCD;
@@ -185,7 +191,7 @@ public class Nba {
 		System.out.println(map.toString());
 		map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		
-		current_mod = 1;
+		current_mod = MAPPING_MODE;
 		dataOutputStream.writeInt(current_mod);
 		map.writeObjectToFile(filepath);
 		System.out.println(map.toString());
@@ -628,7 +634,31 @@ public class Nba {
 		
 	}
 	
-	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) {
+	private static void sendMap(ArrayList<int[]> particles, DataOutputStream dataOutputStream, Map map) throws IOException {
+		dataOutputStream.writeInt(current_mod);
+		for(int i = 0; i< map.MAP_WIDTH; i++) {
+			for(int j = 0; j<map.MAP_WIDTH; j++) {
+				Cell current_cell = map.getCellAt(i, j);
+				dataOutputStream.writeInt(i); //x
+				dataOutputStream.writeInt(j); //y
+				dataOutputStream.writeInt(current_cell.colorId); // COLOR
+				dataOutputStream.writeBoolean(current_cell.frontWall); // Front Wall
+				dataOutputStream.writeBoolean(current_cell.rightWall); // Right Wall
+				dataOutputStream.writeBoolean(current_cell.backWall); // Back Wall
+				dataOutputStream.writeBoolean(current_cell.leftWall); // Left Wall
+				if((i == map.MAP_WIDTH -1) &&(j ==map.MAP_WIDTH)) {
+					dataOutputStream.writeBoolean(false); // Not Ended
+				}else {
+					dataOutputStream.writeBoolean(true); // Ended
+				}
+				
+			}
+		}
+		
+		
+	}
+
+	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) throws IOException {
 		dataOutputStream.writeInt(current_mod);
 		
 		ListIterator<int[]> iterator = particles.listIterator();
@@ -637,7 +667,13 @@ public class Nba {
 			dataOutputStream.writeInt(current_particle[0]); //x
 			dataOutputStream.writeInt(current_particle[1]); //y
 			dataOutputStream.writeInt(current_particle[2]); //orientation
+			if(iterator.hasNext()) {
+				dataOutputStream.writeBoolean(false); //not ended
+			}
+			else {
+				dataOutputStream.writeBoolean(true); //ended
 
+			}
 		}		
 	}
 
