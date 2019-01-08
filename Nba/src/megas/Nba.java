@@ -204,6 +204,9 @@ public class Nba {
 		map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
 		sendMap(dataOutputStream, map);
+		graphicsLCD.clear();
+		graphicsLCD.drawString("MAP IS LOADED", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.refresh();
 		localize(ultrasonicSensorMotor, dataOutputStream, map);
 		dataOutputStream.close();
 		serverSocket.close();
@@ -280,6 +283,7 @@ public class Nba {
 		Cell cell = new Cell(colorId, walls);
 		
 		// Send the cell data to draw the map
+		
 		sendPositionData(dataOutputStream, cell);
 		return cell;
 	}
@@ -464,6 +468,13 @@ public class Nba {
 			traversed.add(current_coordinates);
 			
 			Cell current_cell = explore(ultrasonicSensorMotor, dataOutputStream);
+			if(current_cell.colorId == 1) { //GREEN
+				map.green_coordinates = new Point(current_coordinates.x, current_coordinates.y);
+			} 
+			else if (current_cell.colorId == 0){ //RED
+				map.red_coordinates = new Point(current_coordinates.x, current_coordinates.y);
+
+			}
 			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
 			if (current_cell.colorId != 7) {
 				if(!current_cell.frontWall) {
@@ -857,4 +868,9 @@ public class Nba {
 		Cell cell = new Cell(colorId, walls);
 		return cell;
 	}	
+	
+	public static void goFromTo(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map, Point start_point, Point end_point) {
+		
+	}
+	
 }

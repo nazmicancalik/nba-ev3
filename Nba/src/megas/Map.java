@@ -1,5 +1,6 @@
 package megas;
 
+import java.awt.Point;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -18,8 +19,13 @@ public class Map implements Serializable{
 	
 	private Cell[][] map;
 	
+	public Point green_coordinates;
+	public Point red_coordinates;
+
 	public Map() {
 		map = new Cell[MAP_WIDTH][MAP_WIDTH];
+		green_coordinates = new Point(-1, -1);
+		red_coordinates = new Point(-1, -1);
 		initializeMap();
 	}
 	
