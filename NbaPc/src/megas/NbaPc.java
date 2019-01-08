@@ -252,16 +252,16 @@ public class NbaPc extends JFrame {
 			int xDraw = 0;
 			int yDraw = 0;
 			
-			if (orientation == 0) {
+			if (particle_orientation == 0) {
 				xDraw = y * CELL_WIDTH + (CELL_WIDTH - PARTICLE_WIDTH)/2;
 				yDraw = x * CELL_WIDTH + PARTICLE_PADDING;
-			} else if (orientation == 1) {
-				xDraw = (y + 1) * CELL_WIDTH - PARTICLE_PADDING;
+			} else if (particle_orientation == 1) {
+				xDraw = (y + 1) * CELL_WIDTH - (PARTICLE_WIDTH + PARTICLE_PADDING);
 				yDraw = x * CELL_WIDTH + ((CELL_WIDTH - PARTICLE_WIDTH)/2);	
-			} else if (orientation == 2) {
+			} else if (particle_orientation == 2) {
 				xDraw = y * CELL_WIDTH + (CELL_WIDTH - PARTICLE_WIDTH)/2;
-				yDraw = (x + 1) * CELL_WIDTH - PARTICLE_PADDING;
-			} else if (orientation == 3) {
+				yDraw = (x + 1) * CELL_WIDTH - (PARTICLE_WIDTH + PARTICLE_PADDING);
+			} else if (particle_orientation == 3) {
 				xDraw = y * CELL_WIDTH + PARTICLE_PADDING;
 				yDraw = x * CELL_WIDTH + ((CELL_WIDTH - PARTICLE_WIDTH)/2);	
 			}
