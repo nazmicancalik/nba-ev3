@@ -175,6 +175,7 @@ public class NbaPc extends JFrame {
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
 		
 		current_mod = dataInputStream.readInt();
+		System.out.println("Current Mode" + current_mod);
 		if (current_mod !=0) {
 			return;
 		}
