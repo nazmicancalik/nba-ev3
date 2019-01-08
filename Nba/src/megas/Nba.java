@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Stack;
 
 import lejos.hardware.BrickFinder;
@@ -183,6 +184,7 @@ public class Nba {
 		Map map = new Map();
 		System.out.println(map.toString());
 		map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		
 		current_mod = 1;
 		dataOutputStream.writeInt(current_mod);
 		map.writeObjectToFile(filepath);
@@ -193,8 +195,6 @@ public class Nba {
 		dataOutputStream.close();
 		serverSocket.close();
 	}
-	
-	
 	
 	public static Cell explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
 		boolean[] walls = new boolean[4];
@@ -577,6 +577,240 @@ public class Nba {
 		orientation = 3;
 	}
 	
+	public static Point localize(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map) throws IOException {
+		orientation = 0;
+		ArrayList<int[]> particles = new ArrayList<int[]>();
+		for(int i = 0; i< map.MAP_WIDTH; i++) {
+			for(int j = 0; j<map.MAP_WIDTH; j++) {
+				if(map.getCellAt(i, j).colorId != -1) {	// Yani mapda ise
+					for(int k = 0; k<4; k++ ) {
+						int[] particle = {i, j, k};	// k= orientation Her yöne bakan 4 farklý partikül oluþtur gönder.
+						particles.add(particle);
+					}
+				}
+			}
+		}
+		
+		// Eliminate Particles until we find where we are.
+		while(particles.size() != 1) {
+			sendParticles(particles, dataOutputStream);
+			Cell current_cell = exploreParticles(ultrasonicSensorMotor, particles, map);
+			if(particles.size() > 1){
+				// Robotu ve particlelarý update et hareket edip
+				if(!current_cell.frontWall) {
+					goForward(FULL_BLOCK);
+					int turnDirection = 0;
+					moveParticles(particles, turnDirection);
+				}
+				else if(!current_cell.rightWall){
+					turnRight();
+					goForward(FULL_BLOCK);
+					int turnDirection = 1;
+					moveParticles(particles, turnDirection);
+				}
+				else if(!current_cell.backWall){
+					turnRight();
+					turnRight();
+					goForward(FULL_BLOCK);
+					int turnDirection = 2;
+					moveParticles(particles, turnDirection);
+				}
+				else if(!current_cell.leftWall){
+					turnLeft();
+					goForward(FULL_BLOCK);
+					int turnDirection = 3;
+					moveParticles(particles, turnDirection);
+				}
+			}
+		}
+		
+		return null;
+		
+	}
 	
+	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) {
+		dataOutputStream.writeInt(current_mod);
+		
+		ListIterator<int[]> iterator = particles.listIterator();
+		while(iterator.hasNext()) {
+			int[] current_particle = iterator.next();
+			dataOutputStream.writeInt(current_particle[0]); //x
+			dataOutputStream.writeInt(current_particle[1]); //y
+			dataOutputStream.writeInt(current_particle[2]); //orientation
+
+		}		
+	}
+
+	public static void moveParticles(ArrayList<int[]> particles, int turnDirection) {
+		if (turnDirection==1) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				current_particle[2] = (current_particle[2] + 1) %4;
+				particles.set(i, current_particle);
+			}
+		}else if(turnDirection==3) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				if(current_particle[2] == 0) {
+					current_particle[2] = 3;
+				}
+				else {
+					current_particle[2] = (current_particle[2] -1) %4;
+				}
+				particles.set(i, current_particle);
+			}
+		}else if(turnDirection==2) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				current_particle[2] = (current_particle[2] +2) %4;
+				particles.set(i, current_particle);
+			}
+		}		
+		for(int i = 0; i < particles.size(); i++) {
+			int [] current_particle = particles.get(i);
+			if(current_particle[2] == 0) {
+				current_particle[0] -= 1;
+				particles.set(i, current_particle);
+			}else if(current_particle[2] == 1) {
+				current_particle[1] += 1;
+				particles.set(i, current_particle);
+			}else if(current_particle[2] == 2) {
+				current_particle[0] += 1;
+				particles.set(i, current_particle);
+			}else if(current_particle[2] == 3) {
+				current_particle[1] -= 1;
+				particles.set(i, current_particle);
+			}
+		}
+		
+	}
 	
+	public static Cell exploreParticles(EV3LargeRegulatedMotor ultrasonicSensorMotor,
+			ArrayList<int[]> particles,
+			Map map
+			) throws IOException{
+		boolean[] walls = new boolean[4];
+		int colorId = ev3ColorAdapter.getColorID();
+		
+		// Get the wall readings.
+		if (colorId != 7) {
+			// Take the measurements
+			// Front
+			int wall_readings = 0;
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(0 + orientation) % 4] = true;
+			}
+			else {
+				walls[(0 + orientation) % 4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+			// Right
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(1 + orientation) % 4] = true;
+			}
+			else {
+				walls[(1 + orientation) % 4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+			// Back
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(2 + orientation) % 4] = true;
+			}
+			else {
+				walls[(2 + orientation) % 4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
+			// Left
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(3 + orientation) % 4] = true;
+			}
+			else {
+				walls[(3 + orientation) % 4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);			
+		}
+		
+		ListIterator<int[]> iterator = particles.listIterator();	// TODO Caným sýkýldý.
+		while(iterator.hasNext()) {
+			int [] current_particle = iterator.next();
+			int particle_orientation = current_particle[2];
+			
+			Cell particle_cell = map.getCellAt(current_particle[0], current_particle[1]);
+			
+			// Eliminate the particle if the color is wrong.
+			if (particle_cell.colorId !=colorId) {
+				iterator.remove();
+			}
+			else {
+				// TODO: Orientationlar ayný olmayabilir.
+				// TODO: 
+				
+				int[] wallCheck = new int[4];
+				if(particle_orientation == 0) {
+					wallCheck[0] = 0;
+					wallCheck[1] = 1;
+					wallCheck[2] = 2;
+					wallCheck[3] = 3;
+				} else if(particle_orientation == 1) {
+					wallCheck[0] = 3;
+					wallCheck[1] = 0;
+					wallCheck[2] = 1;
+					wallCheck[3] = 2;
+				} else if(particle_orientation == 2) {
+					wallCheck[0] = 2;
+					wallCheck[1] = 3;
+					wallCheck[2] = 0;
+					wallCheck[3] = 1;
+				} else if(particle_orientation == 3) {
+					wallCheck[0] = 1;
+					wallCheck[1] = 2;
+					wallCheck[2] = 3;
+					wallCheck[3] = 0;
+				}
+				
+				if(walls[wallCheck[0]] != particle_cell.frontWall) {
+					iterator.remove();
+				}
+				else if(walls[wallCheck[1]] != particle_cell.rightWall) {
+					iterator.remove();
+				}
+				else if(walls[wallCheck[2]] != particle_cell.backWall) {
+					iterator.remove();
+				}
+				else if(walls[wallCheck[3]] != particle_cell.leftWall) {
+					iterator.remove();
+				}
+			}
+		}
+		Cell cell = new Cell(colorId, walls);
+		return cell;
+	}	
 }
