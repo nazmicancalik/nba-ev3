@@ -116,7 +116,7 @@ public class NbaPc extends JFrame {
 		
 		current_mod = dataInputStream.readInt();
 	
-		if (current_mod !=0) {
+		if (current_mod != MAPPING_MODE) {
 			return;
 		}
 	
@@ -143,10 +143,11 @@ public class NbaPc extends JFrame {
 	}
 	
 	public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) throws IOException {
-			
+		
+		System.out.println("Map transfer is starting");
 		current_mod = dataInputStream.readInt();
 	
-		if (current_mod !=0) {
+		if (current_mod != LOCALIZATION_MODE) {
 			return;
 		}
 		
@@ -191,18 +192,6 @@ public class NbaPc extends JFrame {
 		Cell cell = new Cell(colorId, walls);
 		cell.isVisited = true;
 		map.addCell(cell, xPos, yPos);
-		
-		System.out.println("***********************");
-		System.out.println(colorId);
-		System.out.println(xPos);
-		System.out.println(yPos);
-		System.out.println(orientation);
-		System.out.println(colorId);
-		System.out.println(frontWall);
-		System.out.println(rightWall);
-		System.out.println(backWall);
-		System.out.println(leftWall);
-		System.out.println("***********************");		
 	}
 	
 	public void paint(Graphics g) {
@@ -276,8 +265,6 @@ public class NbaPc extends JFrame {
 					} else if(colorId ==0) {
 						color = Color.RED;
 					}
-					
-					System.out.println(color.toString());
 				}
 				
 				// g2.setColor(color);
