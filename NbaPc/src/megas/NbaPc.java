@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -30,6 +31,9 @@ public class NbaPc extends JFrame {
 	// =================================================================
 	public static final int CELL_WIDTH = 100;
 	public static final int MEGAS_WIDTH = 50;
+	public static final int PARTICLE_WIDTH = 20;
+	public static final int PARTICLE_PADDING = 10;
+	
 	
 	public static final int FRAME_WIDTH = CELL_WIDTH * 7;
 	public static final int FRAME_HEIGHT = CELL_WIDTH * 7;
@@ -38,6 +42,7 @@ public class NbaPc extends JFrame {
 	public static final Color WALL_COLOR = Color.YELLOW;
 	public static final Color BACKGROUND_COLOR = Color.GRAY;
 	public static final Color STRIPE_COLOR = Color.DARK_GRAY;
+	public static final Color PARTICLE_COLOR = Color.GREEN;
 	
 	public static final int MAPPING_MODE = 0;
 	public static final int LOCALIZATION_MODE = 1;
@@ -46,6 +51,7 @@ public class NbaPc extends JFrame {
 	// ========================= POSITION INFO =========================
 	// =================================================================
 	static Map map;
+	static ArrayList<int[]> particles;
 	
 	static int xPos = 3;
 	static int yPos = 3;
@@ -90,42 +96,80 @@ public class NbaPc extends JFrame {
 			dataOutputStream.flush();
 		}
 		
+		// Get the discovered map data
 		if(current_mod == LOCALIZATION_MODE) {
 			System.out.println("MOD IS CHANGED TO LOCALIZATION");
-			map = receiveLocalizationMapInfo();		
+			receiveLocalizationMapInfo(dataInputStream);		
+			dataOutputStream.flush(); // TODO: This can be dangerous.
 		}
 		
+		// Get particles.
 		while(current_mod == LOCALIZATION_MODE) {
-			
+			receiveParticlesInfo(dataInputStream);
+			monitor.repaint();
+			dataOutputStream.flush();
 		}
 		
-		
 	}
 	
-public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) throws IOException {
+	public static void receiveParticlesInfo(DataInputStream dataInputStream) throws IOException {
 		
-	current_mod = dataInputStream.readInt();
-
-	if (current_mod !=0) {
-		return;
+		current_mod = dataInputStream.readInt();
+	
+		if (current_mod !=0) {
+			return;
+		}
+	
+		boolean isFinished = false;
+		System.out.println("Particle transfer is starting...");
+		particles.clear();
+		
+		while(!isFinished) {
+			int[] particle = new int[3];
+			
+			int xCoordinate = dataInputStream.readInt();
+			int yCoordinate = dataInputStream.readInt();
+			int orientation = dataInputStream.readInt();
+			
+			particle[0] = xCoordinate;
+			particle[1] = yCoordinate;
+			particle[2] = orientation;
+			
+			particles.add(particle);
+			isFinished = dataInputStream.readBoolean();
+		}
+	
+		System.out.println("Particle transfer is complete");
 	}
 	
-	 = dataInputStream.readInt();
-	yPos = dataInputStream.readInt();
-	orientation = dataInputStream.readInt();
-	int colorId = dataInputStream.readInt();
+	public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) throws IOException {
+			
+		current_mod = dataInputStream.readInt();
 	
-	boolean frontWall = dataInputStream.readBoolean();
-	boolean rightWall = dataInputStream.readBoolean();
-	boolean backWall = dataInputStream.readBoolean();
-	boolean leftWall = dataInputStream.readBoolean();
-	boolean[] walls = { frontWall, rightWall, backWall, leftWall };
-	
-	Cell cell = new Cell(colorId, walls);
-	cell.isVisited = true;
-	map.addCell(cell, xPos, yPos);		
-}
-
+		if (current_mod !=0) {
+			return;
+		}
+		
+		for(int i = 0; i< map.MAP_WIDTH; i++) {
+			for(int j = 0; j<map.MAP_WIDTH; j++) {
+				int xCoordinate = dataInputStream.readInt();
+				int yCoordinate = dataInputStream.readInt();
+				int colorId = dataInputStream.readInt();
+				
+				boolean frontWall = dataInputStream.readBoolean();
+				boolean rightWall = dataInputStream.readBoolean();
+				boolean backWall = dataInputStream.readBoolean();
+				boolean leftWall = dataInputStream.readBoolean();
+				boolean[] walls = { frontWall, rightWall, backWall, leftWall };
+				
+				Cell cell = new Cell(colorId, walls);
+				cell.isVisited = false;
+				map.addCell(cell, xCoordinate, yCoordinate);
+				boolean isFinished = dataInputStream.readBoolean();
+			}
+		}
+		System.out.println("Map transfer is complete");
+	}
 	
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
 		
@@ -163,10 +207,51 @@ public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) t
 	
 	public void paint(Graphics g) {
 		super.paint(g);
-		displayMap(map, g);
-		displayMegas(xPos,yPos,g);
+		
+		if (current_mod == MAPPING_MODE) {
+			displayMap(map, g);
+			displayMegas(xPos,yPos,g);	
+		} else if (current_mod == LOCALIZATION_MODE) {
+			displayMap(map,g);
+			displayParticles(particles,g);
+		}
 	}
 
+	public void displayParticles(ArrayList<int[]> particles, Graphics g) {
+		
+		ListIterator<int[]> iterator = particles.listIterator();
+		
+		while(iterator.hasNext()) {
+			int[] current_particle = iterator.next();
+			
+			int x = current_particle[0];
+			int y = current_particle[1];
+			int particle_orientation = current_particle[2];
+			
+			// Print the particle
+			Graphics2D g2 = (Graphics2D) g;
+			g2.setColor(PARTICLE_COLOR);
+			int xDraw = 0;
+			int yDraw = 0;
+			
+			if (orientation == 0) {
+				xDraw = y * CELL_WIDTH + (CELL_WIDTH - PARTICLE_WIDTH)/2;
+				yDraw = x * CELL_WIDTH + PARTICLE_PADDING;
+			} else if (orientation == 1) {
+				xDraw = (y + 1) * CELL_WIDTH - PARTICLE_PADDING;
+				yDraw = x * CELL_WIDTH + ((CELL_WIDTH - PARTICLE_WIDTH)/2);	
+			} else if (orientation == 2) {
+				xDraw = y * CELL_WIDTH + (CELL_WIDTH - PARTICLE_WIDTH)/2;
+				yDraw = (x + 1) * CELL_WIDTH - PARTICLE_PADDING;
+			} else if (orientation == 3) {
+				xDraw = y * CELL_WIDTH + PARTICLE_PADDING;
+				yDraw = x * CELL_WIDTH + ((CELL_WIDTH - PARTICLE_WIDTH)/2);	
+			}
+			
+			g2.fillRect(xDraw,yDraw, PARTICLE_WIDTH, PARTICLE_WIDTH);
+		}	
+	}
+	
 	public void displayMap( Map map, Graphics g ){
 		Graphics2D g2 = (Graphics2D) g;
 
@@ -186,7 +271,7 @@ public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) t
 						color = Color.GREEN;
 					} else if (colorId == 2) {
 						color = Color.BLUE;
-					} else if(colorId ==7) {
+					} else if(colorId == 7) {
 						color = Color.BLACK;
 					} else if(colorId ==0) {
 						color = Color.RED;
