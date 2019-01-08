@@ -680,7 +680,7 @@ public class Nba {
 
 	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) throws IOException {
 		dataOutputStream.writeInt(current_mod);
-		
+		System.out.println("PARTICLES ARE SENT");
 		ListIterator<int[]> iterator = particles.listIterator();
 		while(iterator.hasNext()) {
 			int[] current_particle = iterator.next();
