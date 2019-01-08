@@ -202,6 +202,8 @@ public class Nba {
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
 		*/
+		current_mod = LOCALIZATION_MODE;
+		dataOutputStream.writeInt(current_mod);
 		map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
 		sendMap(dataOutputStream, map);
