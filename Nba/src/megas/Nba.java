@@ -185,7 +185,7 @@ public class Nba {
 		Button.waitForAnyPress();
 		
 		
-		
+		/*
 		// ============ MAP MAKING ============ 
 		Map map = new Map();
 		current_mod = MAPPING_MODE;
@@ -201,10 +201,10 @@ public class Nba {
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
 	
-		
+		*/
 		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
-		//Map map = new Map();
+		Map map = new Map();
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
 		map = map.ReadObjectFromFile(filepath);
@@ -417,60 +417,62 @@ public class Nba {
 			System.out.println("new x: " + new_coordinates.x + "new y: " + new_coordinates.y);
 			System.out.println("Manhattan Distance: " + manhattan_distance);
 			System.out.println("===========================");
-			if (manhattan_distance > 1) {
-				while(manhattan_distance > 1 || checkIfThereIsWallBetween(map, current_coordinates,new_coordinates)) {	// Burasý kesin büyüktür 1 olmalý.
-					
-					int direction = traversed_directions.pop();
-					System.out.println("#########################");
-					System.out.println("Manhattan Distance: " + manhattan_distance);
-					System.out.println("Direction: " + direction);
-					System.out.println("Pre Orientation: " + orientation);
-					System.out.println("#########################");
-					
-					if (direction == 0) {
-						changeOrientationAndGoUp();
-						System.out.println("-----------------");
-						System.out.println("GO UP");
-						current_coordinates.x = current_coordinates.x - 1;
-					} else if (direction == 1) {
-						changeOrientationAndGoRight();
-						System.out.println("-----------------");
-						System.out.println("GO RIGHT");
-						current_coordinates.y = current_coordinates.y + 1;
-					} else if (direction == 2) {
-						System.out.println("-----------------");
-						System.out.println("GO DOWN");
-						changeOrientationAndGoDown();
-						current_coordinates.x = current_coordinates.x + 1;
-					} else if (direction == 3) {
-						System.out.println("-----------------");
-						System.out.println("GO LEFT");
-						changeOrientationAndGoLeft();
-						current_coordinates.y = current_coordinates.y - 1;
-					}
+			while(manhattan_distance > 1 || checkIfThereIsWallBetween(map, current_coordinates,new_coordinates)) {	// Burasý kesin büyüktür 1 olmalý.
+				
+				int direction = traversed_directions.pop();
+				System.out.println("#########################");
+				System.out.println("Manhattan Distance: " + manhattan_distance);
+				System.out.println("Direction: " + direction);
+				System.out.println("Pre Orientation: " + orientation);
+				System.out.println("#########################");
+				
+				if (direction == 0) {
+					changeOrientationAndGoUp();
 					System.out.println("-----------------");
-					System.out.println("After turning Orientation: " + orientation);
-					manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
+					System.out.println("GO UP");
+					current_coordinates.x = current_coordinates.x - 1;
+				} else if (direction == 1) {
+					changeOrientationAndGoRight();
+					System.out.println("-----------------");
+					System.out.println("GO RIGHT");
+					current_coordinates.y = current_coordinates.y + 1;
+				} else if (direction == 2) {
+					System.out.println("-----------------");
+					System.out.println("GO DOWN");
+					changeOrientationAndGoDown();
+					current_coordinates.x = current_coordinates.x + 1;
+				} else if (direction == 3) {
+					System.out.println("-----------------");
+					System.out.println("GO LEFT");
+					changeOrientationAndGoLeft();
+					current_coordinates.y = current_coordinates.y - 1;
 				}
+				System.out.println("-----------------");
+				System.out.println("After turning Orientation: " + orientation);
+				manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
 			}
 			
 			if(new_coordinates.x < current_coordinates.x){
 				// Go up
+				System.out.println("GOING FORWARD");
 				traversed_directions.push(2);
 				changeOrientationAndGoUp();
 			}
 			else if(new_coordinates.x > current_coordinates.x) {
 				// Go down
+				System.out.println("GOING DOWN");
 				traversed_directions.push(0);
 				changeOrientationAndGoDown();
 			}
 			else if(new_coordinates.y > current_coordinates.y) {
 				// Go right
+				System.out.println("GOING RIGHT");
 				traversed_directions.push(3);
 				changeOrientationAndGoRight();
 			}
 			else if(new_coordinates.y < current_coordinates.y) {
 				// Go left
+				System.out.println("GOING LEFT");
 				traversed_directions.push(1);
 				changeOrientationAndGoLeft();
 			}
@@ -617,6 +619,7 @@ public class Nba {
 	
 	public static void localize(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map) throws IOException {
 		orientation = 0;
+		System.out.println(" LOCALIZATION STARTS ");
 		ArrayList<int[]> particles = new ArrayList<int[]>();
 		for(int i = 0; i< map.MAP_WIDTH; i++) {
 			for(int j = 0; j<map.MAP_WIDTH; j++) {
@@ -629,8 +632,9 @@ public class Nba {
 			}
 		}
 		
+		System.out.println("PARTICLES SIZE " + particles.size());
 		// Eliminate Particles until we find where we are.
-		while(particles.size() < 2) {	// TODO
+		while(particles.size() > 1) {	// TODO
 			sendParticles(particles, dataOutputStream);
 			Cell current_cell = exploreParticles(ultrasonicSensorMotor, particles, map);
 			if(particles.size() > 1){

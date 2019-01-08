@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.ListIterator;
 
 import javax.swing.JButton;
@@ -70,6 +71,7 @@ public class NbaPc extends JFrame {
 		setResizable(true);
 		setVisible(true);
 		map = new Map();
+		particles = new ArrayList<int[]>();
 	}
 	
 	public static void main(String[] args) throws Exception	{
@@ -229,13 +231,13 @@ public class NbaPc extends JFrame {
 			displayMegas(xPos,yPos,g);	
 		} else if (current_mod == LOCALIZATION_MODE) {
 			displayMap(map,g);
-			displayParticles(particles,g);
+			displayParticles(g);
 		}
 	}
 
-	public void displayParticles(ArrayList<int[]> particles, Graphics g) {
+	public void displayParticles(Graphics g) {
 		
-		ListIterator<int[]> iterator = particles.listIterator();
+		Iterator<int[]> iterator = particles.iterator();
 		
 		while(iterator.hasNext()) {
 			int[] current_particle = iterator.next();
