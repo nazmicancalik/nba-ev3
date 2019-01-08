@@ -28,11 +28,11 @@ public class NbaPc extends JFrame {
 	// =================================================================
 	// ============================ MAP INFO ===========================
 	// =================================================================
-	public static final int FRAME_WIDTH = 800;
-	public static final int FRAME_HEIGHT = 800;
+	public static final int FRAME_WIDTH = 700;
+	public static final int FRAME_HEIGHT = 700;
 	
-	public static final int CELL_WIDTH = 300;
-	public static final int MEGAS_WIDTH = 100;
+	public static final int CELL_WIDTH = 100;
+	public static final int MEGAS_WIDTH = 50;
 	
 	public static final Color MEGAS_COLOR = Color.ORANGE;
 	
