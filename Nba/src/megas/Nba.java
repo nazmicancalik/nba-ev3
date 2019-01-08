@@ -195,9 +195,16 @@ public class Nba {
 		dataOutputStream.writeInt(current_mod);
 		map.writeObjectToFile(filepath);
 		System.out.println(map.toString());
+		
+		graphicsLCD.clear();
+		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.refresh();
+		Button.waitForAnyPress();
+
 		map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
-
+		sendMap(dataOutputStream, map);
+		localize(ultrasonicSensorMotor, dataOutputStream, map);
 		dataOutputStream.close();
 		serverSocket.close();
 	}
@@ -583,7 +590,7 @@ public class Nba {
 		orientation = 3;
 	}
 	
-	public static Point localize(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map) throws IOException {
+	public static void localize(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map) throws IOException {
 		orientation = 0;
 		ArrayList<int[]> particles = new ArrayList<int[]>();
 		for(int i = 0; i< map.MAP_WIDTH; i++) {
@@ -629,12 +636,13 @@ public class Nba {
 				}
 			}
 		}
-		
-		return null;
-		
+		int[] position = particles.get(0);
+		xPos = position[0];
+		yPos = position[1];
+		orientation = position[2];
 	}
 	
-	private static void sendMap(ArrayList<int[]> particles, DataOutputStream dataOutputStream, Map map) throws IOException {
+	private static void sendMap(DataOutputStream dataOutputStream, Map map) throws IOException {
 		dataOutputStream.writeInt(current_mod);
 		for(int i = 0; i< map.MAP_WIDTH; i++) {
 			for(int j = 0; j<map.MAP_WIDTH; j++) {
