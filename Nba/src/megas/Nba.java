@@ -350,19 +350,53 @@ public class Nba {
 		traversed.add(orijin);
 		Point current_coordinates = orijin;
 		
-		Stack<Point> traversed_directions = new Stack<Point>();
+		Stack<Integer> traversed_directions = new Stack<Integer>();
 
 		while(!stack.isEmpty()) {
 			Point new_coordinates = stack.pop();
-			
-			
-			goFromTo(current_coordinates, new_coordinates, map);
-			
-			
+			int manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
+			if (manhattan_distance > 1) {
+				while(manhattan_distance>1) {
+					int direction = traversed_directions.pop();
+					switch (direction) {
+					case 0: changeOrientationAndGoUp();
+						current_coordinates.x = current_coordinates.x - 1;
+					case 1: changeOrientationAndGoRight();
+						current_coordinates.y = current_coordinates.y + 1;
+					case 2: changeOrientationAndGoDown();
+						current_coordinates.x = current_coordinates.x + 1;
+					case 3: changeOrientationAndGoLeft();
+						current_coordinates.y = current_coordinates.y - 1;
+					}
+					manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
+				}
+			}
+			if(new_coordinates.x < current_coordinates.x){
+				// Go up
+				traversed_directions.push(2);
+				changeOrientationAndGoUp();
+			}
+			else if(new_coordinates.x > current_coordinates.x) {
+				// Go down
+				traversed_directions.push(0);
+				changeOrientationAndGoDown();
+			}
+			else if(new_coordinates.y > current_coordinates.y) {
+				// Go right
+				traversed_directions.push(3);
+				changeOrientationAndGoRight();
+			}
+			else if(new_coordinates.y < current_coordinates.y) {
+				// Go left
+				traversed_directions.push(1);
+				changeOrientationAndGoLeft();
+			}
+
 			current_coordinates = new_coordinates;
 			xPos = current_coordinates.x;
 			yPos = current_coordinates.y;
 			traversed.add(current_coordinates);
+			
 			Cell current_cell = explore(ultrasonicSensorMotor, dataOutputStream);
 			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
 			if(!current_cell.frontWall) {
@@ -394,6 +428,61 @@ public class Nba {
 		return map;
 	}
 	
+	public static void changeOrientationAndGoUp() {
+		if(orientation==1) {
+			turnLeft();
+		}
+		else if(orientation==2) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==3) {
+			turnRight();
+		}
+		goForward(FULL_BLOCK);
+	}
+	
+	public static void changeOrientationAndGoDown() {
+		if(orientation==3) {
+			turnLeft();
+		}
+		else if(orientation==0) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==1) {
+			turnRight();
+		}
+		goForward(FULL_BLOCK);
+	}
+	
+	public static void changeOrientationAndGoRight() {
+		if(orientation==2) {
+			turnLeft();
+		}
+		else if(orientation==3) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==0) {
+			turnRight();
+		}
+		goForward(FULL_BLOCK);
+	}
+	
+	public static void changeOrientationAndGoLeft() {
+		if(orientation==0) {
+			turnLeft();
+		}
+		else if(orientation==1) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==2) {
+			turnRight();
+		}
+		goForward(FULL_BLOCK);
+	}
 	public static void goFromTo(Point start_coordinates, Point end_coordinates, Map map) {
 		Stack<Point> stack = new Stack<Point>();
 		HashMap<Point, Point> parentMap = new HashMap<Point,Point>();
