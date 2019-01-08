@@ -189,18 +189,19 @@ public class Nba {
 		//goForward(-FULL_BLOCK);
 		Map map = new Map();
 		System.out.println(map.toString());
-		map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		//map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		
 		current_mod = MAPPING_MODE;
 		dataOutputStream.writeInt(current_mod);
 		map.writeObjectToFile(filepath);
 		System.out.println(map.toString());
 		
+		/*
 		graphicsLCD.clear();
 		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
-
+		*/
 		map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
 		sendMap(dataOutputStream, map);
@@ -509,7 +510,7 @@ public class Nba {
 			}
 
 
-		}		
+		}
 		return map;
 	}
 	
