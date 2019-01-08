@@ -703,9 +703,9 @@ public class Nba {
 	}
 
 	private static void sendParticles(ArrayList<int[]> particles, DataOutputStream dataOutputStream) throws IOException {
+		System.out.println("-----sendParticles-----");
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
-		System.out.println("PARTICLES ARE SENT");
 		ListIterator<int[]> iterator = particles.listIterator();
 		while(iterator.hasNext()) {
 			int[] current_particle = iterator.next();
@@ -722,7 +722,9 @@ public class Nba {
 				dataOutputStream.writeBoolean(true); //ended
 			}
 			dataOutputStream.flush();
-		}		
+		}
+		System.out.println("-----sendParticles Over -----");
+
 	}
 
 	public static void moveParticles(ArrayList<int[]> particles, int turnDirection) {
