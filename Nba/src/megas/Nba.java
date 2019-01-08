@@ -117,6 +117,9 @@ public class Nba {
 	static int xPos = 3;
 	static int yPos = 3;
 	
+	static int current_mod = 0; // mapping
+	private static final String filepath="./map_file";
+
 	static MovePilot pilot;
 	static GraphicsLCD graphicsLCD;
 
@@ -177,7 +180,16 @@ public class Nba {
 		//turnRight();
 		//turnLeft();
 		//goForward(-FULL_BLOCK);
-		Map map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		Map map = new Map();
+		System.out.println(map.toString());
+		map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		current_mod = 1;
+		dataOutputStream.writeInt(current_mod);
+		map.writeObjectToFile(filepath);
+		System.out.println(map.toString());
+		map.ReadObjectFromFile(filepath);
+		System.out.println(map.toString());
+
 		dataOutputStream.close();
 		serverSocket.close();
 	}
@@ -275,6 +287,7 @@ public class Nba {
 	}
 	
 	public static void sendPositionData(DataOutputStream dataOutputStream, Cell currentCell) throws IOException {
+		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.writeInt(xPos);
 		dataOutputStream.writeInt(yPos);
 		
@@ -285,6 +298,7 @@ public class Nba {
 		dataOutputStream.writeBoolean(currentCell.rightWall);
 		dataOutputStream.writeBoolean(currentCell.backWall);
 		dataOutputStream.writeBoolean(currentCell.leftWall);
+
 	}
 	
 	public static float getUltrasonicSensorValue() {
@@ -562,5 +576,7 @@ public class Nba {
 		goForward(FULL_BLOCK);
 		orientation = 3;
 	}
+	
+	
 	
 }

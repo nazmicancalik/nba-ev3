@@ -1,7 +1,12 @@
 package megas;
 
-public class Cell {
-	
+import java.io.Serializable;
+
+public class Cell implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public static final float WALL_DISTANCE_THRESHOLD = 25.0f;
 	
 	int colorId = -1;

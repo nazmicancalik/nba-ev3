@@ -1,8 +1,19 @@
 package megas;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import megas.Cell;
 
-public class Map {
+public class Map implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static final int MAP_WIDTH = 7;
 	
 	private Cell[][] map;
@@ -33,4 +44,44 @@ public class Map {
 			}
 		}
 	}
+    public void writeObjectToFile(String filepath) {
+
+        try {
+            FileOutputStream fileOut = new FileOutputStream(filepath);
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            objectOut.writeObject(this);
+            objectOut.close();
+            System.out.println("The Object  was succesfully written to a file");
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+
+    public Map ReadObjectFromFile(String filepath) {
+ 
+        try {
+ 
+            FileInputStream fileIn = new FileInputStream(filepath);
+            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+ 
+            Map obj = (Map) objectIn.readObject();
+ 
+            System.out.println("The Object has been read from the file");
+            objectIn.close();
+            return obj;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+    
+    
+    @Override
+    public String toString() {
+        return new StringBuffer(" THIS IS A MAP: ").append(this.map[3][3].colorId).toString();
+    }
+
 }

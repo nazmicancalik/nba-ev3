@@ -48,6 +48,7 @@ public class NbaPc extends JFrame {
 	static int yPos = 3;
 	static int orientation = 0;
 	
+	static int current_mod = 0; // mapping
 	
 	static InputStream inputStream;
 	static OutputStream outputStream;
@@ -80,14 +81,20 @@ public class NbaPc extends JFrame {
 		dataInputStream = new DataInputStream(inputStream);
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		
-		while(true){
+		while(current_mod==0){
 			receivePositionInfo(dataInputStream);
 			monitor.repaint();
 			dataOutputStream.flush();
 		}
+		System.out.println("MOD IS CHANGED");
 	}
 	
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
+		
+		current_mod = dataInputStream.readInt();
+		if (current_mod !=0) {
+			return;
+		}
 		xPos = dataInputStream.readInt();
 		yPos = dataInputStream.readInt();
 		orientation = dataInputStream.readInt();
@@ -97,7 +104,6 @@ public class NbaPc extends JFrame {
 		boolean rightWall = dataInputStream.readBoolean();
 		boolean backWall = dataInputStream.readBoolean();
 		boolean leftWall = dataInputStream.readBoolean();
-		
 		boolean[] walls = { frontWall, rightWall, backWall, leftWall };
 		
 		Cell cell = new Cell(colorId, walls);
