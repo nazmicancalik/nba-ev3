@@ -135,12 +135,20 @@ public class NbaPc extends JFrame {
 				Color color = Color.GRAY;
 				// If the cell is visited then get the color from inside.
 				if (currentCell.isVisited) {
-					color = new Color(map.getCellAt(i, j).colorId);
+					int colorId = map.getCellAt(i, j).colorId;
+					if (colorId == 6) {
+						color = Color.WHITE;
+					} else if (colorId == 1) {
+						color = Color.GREEN;
+					} else if (colorId == 2) {
+						color = Color.RED;
+					}
+					
 					System.out.println(color.toString());
 				}
 				
-				g2.setColor(color);
-				// g2.setPaint(color);
+				// g2.setColor(color);
+				g2.setPaint(color);
 				
 				// g2.drawRect(i * CELL_WIDTH, (7-j) * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
 				g2.fillRect(j * CELL_WIDTH, i * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
