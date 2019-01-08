@@ -35,6 +35,8 @@ public class NbaPc extends JFrame {
 	public static final int MEGAS_WIDTH = 50;
 	
 	public static final Color MEGAS_COLOR = Color.ORANGE;
+	public static final Color WALL_COLOR = Color.BLACK;
+	public static final Color STRIPE_COLOR = Color.GRAY;
 	
 	// =================================================================
 	// ========================= POSITION INFO =========================
@@ -140,6 +142,37 @@ public class NbaPc extends JFrame {
 				}
 				g2.setColor(color);
 				g2.fillRect(i * CELL_WIDTH, j * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
+				
+				// Draw the walls
+				g2.setStroke(new BasicStroke(5.0f));
+				
+				// Front Wall
+				g2.setPaint(STRIPE_COLOR);
+				if (currentCell.frontWall) {
+					g2.setPaint(WALL_COLOR);
+				}
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, j*CELL_WIDTH, j*CELL_WIDTH));
+				
+				// Right Wall
+				g2.setPaint(STRIPE_COLOR);
+				if (currentCell.frontWall) {
+					g2.setPaint(WALL_COLOR);
+				}
+				g2.draw(new Line2D.Double( (i+1)*CELL_WIDTH, (i+1)*CELL_WIDTH, j*CELL_WIDTH, (j+1)*CELL_WIDTH));
+				
+				// Back Wall
+				g2.setPaint(STRIPE_COLOR);
+				if (currentCell.frontWall) {
+					g2.setPaint(WALL_COLOR);
+				}
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, j * CELL_WIDTH, (j+1)*CELL_WIDTH));
+				
+				// Left Wall
+				g2.setPaint(STRIPE_COLOR);
+				if (currentCell.frontWall) {
+					g2.setPaint(WALL_COLOR);
+				}
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, i*CELL_WIDTH, j*CELL_WIDTH, (j+1)*CELL_WIDTH));
 			}
 		}
 	}
