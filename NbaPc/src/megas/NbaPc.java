@@ -100,7 +100,7 @@ public class NbaPc extends JFrame {
 		if(current_mod == LOCALIZATION_MODE) {
 			System.out.println("MOD IS CHANGED TO LOCALIZATION");
 			receiveLocalizationMapInfo(dataInputStream);		
-			dataOutputStream.flush(); // TODO: This can be dangerous.
+			//dataOutputStream.flush(); // TODO: This can be dangerous.
 		}
 		
 		// Get particles.
@@ -163,6 +163,16 @@ public class NbaPc extends JFrame {
 				boolean leftWall = dataInputStream.readBoolean();
 				boolean[] walls = { frontWall, rightWall, backWall, leftWall };
 				
+				System.out.println("*****************");
+				System.out.println("x " + xCoordinate);
+				System.out.println("y " + yCoordinate);
+				System.out.println("colorId " + colorId);
+				System.out.println( frontWall);
+				System.out.println( rightWall);
+				System.out.println( backWall);
+				System.out.println( leftWall);
+				System.out.println("*****************");
+
 				Cell cell = new Cell(colorId, walls);
 				cell.isVisited = false;
 				map.addCell(cell, xCoordinate, yCoordinate);

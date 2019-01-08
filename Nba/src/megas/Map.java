@@ -57,6 +57,7 @@ public class Map implements Serializable{
             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
             objectOut.writeObject(this);
             objectOut.close();
+            fileOut.flush();
             System.out.println("The Object  was succesfully written to a file");
 
         } catch (Exception ex) {
