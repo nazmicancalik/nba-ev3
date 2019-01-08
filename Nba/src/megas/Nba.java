@@ -360,7 +360,7 @@ public class Nba {
 			// Kanka sanýrým burda hatamýz þu: Eðer geri baþladýðýmýz yere gitmek istiyosak, poplamamýz lazým.
 			// Ama ilk defa gidiyosak poplamamýz lazým. Pushlamamýz lazým
 			if (manhattan_distance > 1) {
-				while(manhattan_distance > 1) {	// Burasý büyüktür 0 da olabilir.
+				while(manhattan_distance > 0) {	// Burasý büyüktür 0 da olabilir.
 					int direction = traversed_directions.pop();
 					switch (direction) {
 						case 0: 
@@ -383,25 +383,27 @@ public class Nba {
 					manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
 				}
 			}
-			if(new_coordinates.x < current_coordinates.x){
-				// Go up
-				traversed_directions.push(2);
-				changeOrientationAndGoUp();
-			}
-			else if(new_coordinates.x > current_coordinates.x) {
-				// Go down
-				traversed_directions.push(0);
-				changeOrientationAndGoDown();
-			}
-			else if(new_coordinates.y > current_coordinates.y) {
-				// Go right
-				traversed_directions.push(3);
-				changeOrientationAndGoRight();
-			}
-			else if(new_coordinates.y < current_coordinates.y) {
-				// Go left
-				traversed_directions.push(1);
-				changeOrientationAndGoLeft();
+			else {
+				if(new_coordinates.x < current_coordinates.x){
+					// Go up
+					traversed_directions.push(2);
+					changeOrientationAndGoUp();
+				}
+				else if(new_coordinates.x > current_coordinates.x) {
+					// Go down
+					traversed_directions.push(0);
+					changeOrientationAndGoDown();
+				}
+				else if(new_coordinates.y > current_coordinates.y) {
+					// Go right
+					traversed_directions.push(3);
+					changeOrientationAndGoRight();
+				}
+				else if(new_coordinates.y < current_coordinates.y) {
+					// Go left
+					traversed_directions.push(1);
+					changeOrientationAndGoLeft();
+				}
 			}
 
 			current_coordinates = new_coordinates;
@@ -481,7 +483,7 @@ public class Nba {
 		else if(orientation==0) {
 			turnRight();
 		}
-		
+
 		goForward(FULL_BLOCK);
 	}
 	
