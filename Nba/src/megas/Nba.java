@@ -176,6 +176,7 @@ public class Nba {
 		//turnRight();
 		//turnRight();
 		//turnLeft();
+		//goForward(-FULL_BLOCK);
 		Map map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		dataOutputStream.close();
 		serverSocket.close();
@@ -431,7 +432,7 @@ public class Nba {
 				changeOrientationAndGoLeft();
 			}
 		
-
+			Point prev_coordinates = current_coordinates;
 			current_coordinates = new_coordinates;
 			xPos = current_coordinates.x;
 			yPos = current_coordinates.y;
@@ -439,30 +440,38 @@ public class Nba {
 			
 			Cell current_cell = explore(ultrasonicSensorMotor, dataOutputStream);
 			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
-			if(!current_cell.frontWall) {
-				Point forward_coordinates = new Point(current_coordinates.x -1 , current_coordinates.y);
-				if(!traversed.contains(forward_coordinates)) {
-					stack.push(forward_coordinates);
+			if (current_cell.colorId != 7) {
+				if(!current_cell.frontWall) {
+					Point forward_coordinates = new Point(current_coordinates.x -1 , current_coordinates.y);
+					if(!traversed.contains(forward_coordinates)) {
+						stack.push(forward_coordinates);
+					}
 				}
-			}
-			if(!current_cell.rightWall) {
-				Point right_coordinates = new Point(current_coordinates.x , current_coordinates.y+1);
-				if(!traversed.contains(right_coordinates)) {
-					stack.push(right_coordinates);
-				}			
-			}
-			if(!current_cell.backWall) {
-				Point back_coordinates = new Point(current_coordinates.x +1 , current_coordinates.y);
-				if(!traversed.contains(back_coordinates)) {
-					stack.push(back_coordinates);
+				if(!current_cell.rightWall) {
+					Point right_coordinates = new Point(current_coordinates.x , current_coordinates.y+1);
+					if(!traversed.contains(right_coordinates)) {
+						stack.push(right_coordinates);
+					}			
 				}
-			}
-			if(!current_cell.leftWall) {
-				Point left_coordinates = new Point(current_coordinates.x , current_coordinates.y-1);
-				if(!traversed.contains(left_coordinates)) {
-					stack.push(left_coordinates);
+				if(!current_cell.backWall) {
+					Point back_coordinates = new Point(current_coordinates.x +1 , current_coordinates.y);
+					if(!traversed.contains(back_coordinates)) {
+						stack.push(back_coordinates);
+					}
 				}
+				if(!current_cell.leftWall) {
+					Point left_coordinates = new Point(current_coordinates.x , current_coordinates.y-1);
+					if(!traversed.contains(left_coordinates)) {
+						stack.push(left_coordinates);
+					}
+				}
+			}else {
+				goForward(-FULL_BLOCK);
+				traversed_directions.pop();
+				current_coordinates = prev_coordinates;
+				
 			}
+
 
 		}		
 		return map;
