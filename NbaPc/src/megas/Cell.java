@@ -1,7 +1,8 @@
 package megas;
 
-public class Cell {
-	
+public class Cell{
+
+
 	public static final float WALL_DISTANCE_THRESHOLD = 25.0f;
 	
 	int colorId = -1;

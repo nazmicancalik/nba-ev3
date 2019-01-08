@@ -3,6 +3,8 @@ package megas;
 import megas.Cell;
 
 public class Map {
+
+
 	public static final int MAP_WIDTH = 7;
 	
 	private Cell[][] map;
@@ -34,4 +36,6 @@ public class Map {
 			}
 		}
 	}
+
+
 }
