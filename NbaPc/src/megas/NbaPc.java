@@ -39,6 +39,9 @@ public class NbaPc extends JFrame {
 	public static final Color BACKGROUND_COLOR = Color.GRAY;
 	public static final Color STRIPE_COLOR = Color.DARK_GRAY;
 	
+	public static final int MAPPING_MODE = 0;
+	public static final int LOCALIZATION_MODE = 1;
+	
 	// =================================================================
 	// ========================= POSITION INFO =========================
 	// =================================================================
@@ -81,13 +84,48 @@ public class NbaPc extends JFrame {
 		dataInputStream = new DataInputStream(inputStream);
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		
-		while(current_mod==0){
+		while(current_mod == MAPPING_MODE){
 			receivePositionInfo(dataInputStream);
 			monitor.repaint();
 			dataOutputStream.flush();
 		}
-		System.out.println("MOD IS CHANGED");
+		
+		if(current_mod == LOCALIZATION_MODE) {
+			System.out.println("MOD IS CHANGED TO LOCALIZATION");
+			map = receiveLocalizationMapInfo();		
+		}
+		
+		while(current_mod == LOCALIZATION_MODE) {
+			
+		}
+		
+		
 	}
+	
+public static void receiveLocalizationMapInfo(DataInputStream dataInputStream) throws IOException {
+		
+	current_mod = dataInputStream.readInt();
+
+	if (current_mod !=0) {
+		return;
+	}
+	
+	 = dataInputStream.readInt();
+	yPos = dataInputStream.readInt();
+	orientation = dataInputStream.readInt();
+	int colorId = dataInputStream.readInt();
+	
+	boolean frontWall = dataInputStream.readBoolean();
+	boolean rightWall = dataInputStream.readBoolean();
+	boolean backWall = dataInputStream.readBoolean();
+	boolean leftWall = dataInputStream.readBoolean();
+	boolean[] walls = { frontWall, rightWall, backWall, leftWall };
+	
+	Cell cell = new Cell(colorId, walls);
+	cell.isVisited = true;
+	map.addCell(cell, xPos, yPos);		
+}
+
 	
 	public static void receivePositionInfo(DataInputStream dataInputStream) throws IOException {
 		
