@@ -1,4 +1,5 @@
 package megas;
+import java.awt.Point;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -46,7 +48,7 @@ public class Nba {
 	// =================================================================
 		
 	public static final double TURN_RIGHT_ANGLE = 75.0;
-	public static final double TURN_LEFT_ANGLE = 75.0;
+	public static final double TURN_LEFT_ANGLE = -75.0;
 	public static final int GRASP_ANGLE = 140;
 	public static final int RELEASE_ANGLE = -180;
 	
@@ -85,8 +87,8 @@ public class Nba {
 	// =================================================================		
 	public static final int ULTRASONIC_ROTATE_RIGHT = 90;
 	public static final int ULTRASONIC_ROTATE_LEFT = -90;
-	public static final int MEASUREMENT_NUMBER = 4;
-	public static final float WALL_DISTANCE = 35.0f;
+	public static final int MEASUREMENT_NUMBER = 5;
+	public static final float WALL_DISTANCE = 20.0f;
 	
 	// =================================================================
 	// ==================== GYRO ROTATING ANGLEs =======================
@@ -170,10 +172,9 @@ public class Nba {
 		
 		OutputStream outputStream = client.getOutputStream();
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-		
+		Button.waitForAnyPress();
 		
 		dfs(ultrasonicSensorMotor, dataOutputStream);
-		
 		dataOutputStream.close();
 		serverSocket.close();
 	}
@@ -192,7 +193,7 @@ public class Nba {
 				wall_readings++;
 			}
 		}
-		if (wall_readings > 1) {
+		if (wall_readings > 2) {
 			walls[(0 + orientation)%4] = true;
 		}
 		else {
@@ -207,7 +208,7 @@ public class Nba {
 				wall_readings++;
 			}
 		}
-		if (wall_readings > 1) {
+		if (wall_readings > 2) {
 			walls[(1 + orientation)%4] = true;
 		}
 		else {
@@ -222,7 +223,7 @@ public class Nba {
 				wall_readings++;
 			}
 		}
-		if (wall_readings > 1) {
+		if (wall_readings > 2) {
 			walls[(2 + orientation)%4] = true;
 		}
 		else {
@@ -237,7 +238,7 @@ public class Nba {
 				wall_readings++;
 			}
 		}
-		if (wall_readings > 1) {
+		if (wall_readings > 2) {
 			walls[(3 + orientation)%4] = true;
 		}
 		else {
@@ -288,7 +289,7 @@ public class Nba {
 		if(sampleProvider.sampleSize() > 0) {
 			float [] samples = new float[sampleProvider.sampleSize()];
 			sampleProvider.fetchSample(samples, 0);
-			return samples[0];
+			return samples[0]*100;
 		}
 		return -1;
 	}
@@ -314,6 +315,7 @@ public class Nba {
 		gyroSensor.reset();
 		pilot.rotate(TURN_LEFT_ANGLE);
 		float gyro_value = getGyroSensorValue();
+		
 		if(gyro_value > LEFT_ROTATE_GYRO_ANGLE + 1) {
 			pilot.rotate(LEFT_ROTATE_GYRO_ANGLE - gyro_value);
 		}else if (gyro_value < LEFT_ROTATE_GYRO_ANGLE - 1) {
@@ -332,101 +334,137 @@ public class Nba {
 	
 	public static float getGyroSensorValue() {
 	    SampleProvider sampleProvider = gyroSensor.getAngleAndRateMode();
-	    while(sampleProvider.sampleSize() == 0);
+	    //while(sampleProvider.sampleSize() == 0);
 		float [] sample = new float[sampleProvider.sampleSize()];
     	sampleProvider.fetchSample(sample, 0);
     	float angle = sample[0];
-    	return angle;
+    	return -1*angle;
 	}
 	
 	public static Map dfs(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException {
 		Map map = new Map();
-		int[] orijin = {xPos, yPos};
-		Sound.playTone(500, 500);
-		Stack<int[]> stack = new Stack<int[]>();
+		Point orijin = new Point(xPos, yPos);
+		Stack<Point> stack = new Stack<Point>();
 		stack.push(orijin);
-		int[] current_coordinates = orijin;
+		ArrayList<Point> traversed = new ArrayList<Point>();
+		traversed.add(orijin);
+		Point current_coordinates = orijin;
+		
+		Stack<Point> traversed_directions = new Stack<Point>();
+
 		while(!stack.isEmpty()) {
-			int[] new_coordinates = stack.pop();
+			Point new_coordinates = stack.pop();
+			
+			
 			goFromTo(current_coordinates, new_coordinates, map);
+			
+			
 			current_coordinates = new_coordinates;
-			xPos = current_coordinates[0];
-			yPos = current_coordinates[1];
+			xPos = current_coordinates.x;
+			yPos = current_coordinates.y;
+			traversed.add(current_coordinates);
 			Cell current_cell = explore(ultrasonicSensorMotor, dataOutputStream);
-			map.addCell(current_cell, current_coordinates[0], current_coordinates[1]);
+			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
 			if(!current_cell.frontWall) {
-				int[] forward_coordinates = {current_coordinates[0] -1 , current_coordinates[0]};
-				stack.push(forward_coordinates);
+				Point forward_coordinates = new Point(current_coordinates.x -1 , current_coordinates.y);
+				if(!traversed.contains(forward_coordinates)) {
+					stack.push(forward_coordinates);
+				}
 			}
 			if(!current_cell.rightWall) {
-				int[] right_coordinates = {current_coordinates[0] , current_coordinates[0]+1};
-				stack.push(right_coordinates);
+				Point right_coordinates = new Point(current_coordinates.x , current_coordinates.y+1);
+				if(!traversed.contains(right_coordinates)) {
+					stack.push(right_coordinates);
+				}			
 			}
 			if(!current_cell.backWall) {
-				int[] back_coordinates = {current_coordinates[0] +1 , current_coordinates[0]};
-				stack.push(back_coordinates);
+				Point back_coordinates = new Point(current_coordinates.x +1 , current_coordinates.y);
+				if(!traversed.contains(back_coordinates)) {
+					stack.push(back_coordinates);
+				}
 			}
 			if(!current_cell.leftWall) {
-				int[] left_coordinates = {current_coordinates[0] , current_coordinates[0]-1};
-				stack.push(left_coordinates);
+				Point left_coordinates = new Point(current_coordinates.x , current_coordinates.y-1);
+				if(!traversed.contains(left_coordinates)) {
+					stack.push(left_coordinates);
+				}
 			}
 
 		}		
 		return map;
 	}
 	
-	public static void goFromTo(int[] start_coordinates, int[] end_coordinates, Map map) {
-		Stack<int[]> stack = new Stack<int[]>();
-		HashMap<int[], int[]> parentMap = new HashMap<int[],int[]>();
-		int[] current_coordinates = start_coordinates;
+	public static void goFromTo(Point start_coordinates, Point end_coordinates, Map map) {
+		Stack<Point> stack = new Stack<Point>();
+		HashMap<Point, Point> parentMap = new HashMap<Point,Point>();
+		Point current_coordinates = start_coordinates;
 		stack.push(current_coordinates);
+		ArrayList<Point> traversed = new ArrayList<Point>();
+		traversed.add(current_coordinates);
 		while(!stack.isEmpty()){
+			//Sound.playTone(500, 500);
 			current_coordinates = stack.pop();
-			if(current_coordinates == end_coordinates) {
+			if(current_coordinates.equals(end_coordinates)) {
 				break;
 			}
-			Cell current_cell = map.getCellAt(current_coordinates[0], current_coordinates[1]);
+			Cell current_cell = map.getCellAt(current_coordinates.x, current_coordinates.y);
 			if(current_cell.colorId != -1) {
 				if(!current_cell.frontWall) {
-					int[] forward_coordinates = {current_coordinates[0] -1 , current_coordinates[0]};
-					stack.push(forward_coordinates);
-					parentMap.putIfAbsent(forward_coordinates, current_coordinates);
+					Point forward_coordinates = new Point(current_coordinates.x -1 , current_coordinates.y);
+					if(!traversed.contains(forward_coordinates)) {
+						stack.push(forward_coordinates);
+						if(parentMap.get(forward_coordinates)==null) {
+							parentMap.put(forward_coordinates, current_coordinates);
+						}
+					}
+
 				}
 				if(!current_cell.rightWall) {
-					int[] right_coordinates = {current_coordinates[0] , current_coordinates[0]+1};
-					stack.push(right_coordinates);
-					parentMap.putIfAbsent(right_coordinates, current_coordinates);
+					Point right_coordinates = new Point(current_coordinates.x , current_coordinates.y+1);
+					if(!traversed.contains(right_coordinates)) {
+						stack.push(right_coordinates);
+						if(parentMap.get(right_coordinates)==null) {
+							parentMap.put(right_coordinates, current_coordinates);
+						}
+					}
 				}
 				if(!current_cell.backWall) {
-					int[] back_coordinates = {current_coordinates[0] +1 , current_coordinates[0]};
-					stack.push(back_coordinates);
-					parentMap.putIfAbsent(back_coordinates, current_coordinates);
+					Point back_coordinates = new Point(current_coordinates.x +1 , current_coordinates.y);
+					if(!traversed.contains(back_coordinates)) {
+						stack.push(back_coordinates);
+						if(parentMap.get(back_coordinates)==null) {
+							parentMap.put(back_coordinates, current_coordinates);
+						}
+					}
 				}
 				if(!current_cell.leftWall) {
-					int[] left_coordinates = {current_coordinates[0] , current_coordinates[0]-1};
-					stack.push(left_coordinates);
-					parentMap.putIfAbsent(left_coordinates, current_coordinates);
+					Point left_coordinates = new Point(current_coordinates.x , current_coordinates.y-1);
+					if(!traversed.contains(left_coordinates)) {
+						stack.push(left_coordinates);
+						if(parentMap.get(left_coordinates)==null) {
+							parentMap.put(left_coordinates, current_coordinates);
+						}
+					}
 				}
 			}
 		}
-		
+		//Sound.playTone(500, 500);
 		ArrayList<int[]> path = new ArrayList<int[]>();
-		
-		while(current_coordinates != start_coordinates) {
-			int[] first_coordinates = parentMap.get(current_coordinates);
+		while(!current_coordinates.equals(start_coordinates)) {
+			Point first_coordinates = new Point(parentMap.get(current_coordinates).x, parentMap.get(current_coordinates).y) ;
 			int[] path_coordinates = new int[4];
-			path_coordinates[0] = first_coordinates[0];
-			path_coordinates[1] = first_coordinates[1];
-			path_coordinates[2] = current_coordinates[0];
-			path_coordinates[3] = current_coordinates[1];
+			path_coordinates[0] = first_coordinates.x;
+			path_coordinates[1] = first_coordinates.y;
+			path_coordinates[2] = current_coordinates.x;
+			path_coordinates[3] = current_coordinates.y;
 			path.add(0, path_coordinates);
 			current_coordinates = first_coordinates;
 		}
+		//Sound.playTone(500, 500);
 		Iterator<int[]> iterator = path.iterator();
 		while(iterator.hasNext()) {
-			Sound.playTone(500, 500);
 			int[] path_coordinates = iterator.next();
-			if(path_coordinates[2] > path_coordinates[0]){
+			if(path_coordinates[2] < path_coordinates[0]){
 				if(orientation==1) {
 					turnLeft();
 				}
@@ -437,11 +475,9 @@ public class Nba {
 				else if(orientation==3) {
 					turnRight();
 				}
-				if(orientation == 0) {
-					goForward(FULL_BLOCK);
-				}
+				goForward(FULL_BLOCK);
 			}
-			else if(path_coordinates[2] < path_coordinates[0]) {
+			else if(path_coordinates[2] > path_coordinates[0]) {
 				if(orientation==3) {
 					turnLeft();
 				}
@@ -452,9 +488,7 @@ public class Nba {
 				else if(orientation==1) {
 					turnRight();
 				}
-				if(orientation == 2) {
-					goForward(FULL_BLOCK);
-				}
+				goForward(FULL_BLOCK);
 			}
 			else if(path_coordinates[3] > path_coordinates[1]) {
 				if(orientation==2) {
@@ -467,9 +501,7 @@ public class Nba {
 				else if(orientation==0) {
 					turnRight();
 				}
-				if(orientation == 3) {
-					goForward(FULL_BLOCK);
-				}
+				goForward(FULL_BLOCK);
 			}
 			else if(path_coordinates[3] < path_coordinates[1]) {
 				if(orientation==0) {
@@ -482,9 +514,8 @@ public class Nba {
 				else if(orientation==2) {
 					turnRight();
 				}
-				if(orientation == 3) {
-					goForward(FULL_BLOCK);
-				}
+				goForward(FULL_BLOCK);
+				
 			}
 			
 		}
