@@ -452,7 +452,6 @@ public class Nba {
 			turnRight();
 		}
 		
-		orientation = 0;
 		goForward(FULL_BLOCK);
 	}
 	
@@ -468,7 +467,6 @@ public class Nba {
 			turnRight();
 		}
 		
-		orientation = 2;
 		goForward(FULL_BLOCK);
 	}
 	
@@ -484,7 +482,6 @@ public class Nba {
 			turnRight();
 		}
 		
-		orientation = 1;
 		goForward(FULL_BLOCK);
 	}
 	
@@ -500,7 +497,6 @@ public class Nba {
 			turnRight();
 		}
 		
-		orientation = 3;
 		goForward(FULL_BLOCK);
 	}
 	/*

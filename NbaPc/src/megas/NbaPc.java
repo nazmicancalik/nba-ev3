@@ -159,7 +159,7 @@ public class NbaPc extends JFrame {
 				if (currentCell.rightWall) {
 					g2.setColor(WALL_COLOR);
 					// g.drawLine((i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH,(i+1)*CELL_WIDTH,  (7-j-1)*CELL_WIDTH);
-					g2.draw(new Line2D.Double((j+1)*CELL_WIDTH, i*CELL_WIDTH,(j+1)*CELL_WIDTH,  i+1*CELL_WIDTH));	
+					g2.draw(new Line2D.Double((j+1)*CELL_WIDTH, i*CELL_WIDTH,(j+1)*CELL_WIDTH,  (i+1)*CELL_WIDTH));	
 				}
 				
 				// Back Wall
@@ -173,7 +173,7 @@ public class NbaPc extends JFrame {
 				if (currentCell.leftWall) {
 					g2.setColor(WALL_COLOR);
 					// g.drawLine(i*CELL_WIDTH,(7-j)*CELL_WIDTH,i*CELL_WIDTH, (7-j-1)*CELL_WIDTH);
-					g2.draw(new Line2D.Double(j*CELL_WIDTH,i*CELL_WIDTH,j*CELL_WIDTH, i+1*CELL_WIDTH));
+					g2.draw(new Line2D.Double(j*CELL_WIDTH,i*CELL_WIDTH,j*CELL_WIDTH, (i+1)*CELL_WIDTH));
 				}
 			}
 		}
@@ -199,7 +199,7 @@ public class NbaPc extends JFrame {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(MEGAS_COLOR);
 		// g2.setStroke( new BasicStroke( 5.0f ));
-		g2.fillRect(xPos * CELL_WIDTH + ((CELL_WIDTH - MEGAS_WIDTH)/2), (7-yPos) * CELL_WIDTH + ((CELL_WIDTH - MEGAS_WIDTH)/2), MEGAS_WIDTH , MEGAS_WIDTH);
+		g2.fillRect(yPos * CELL_WIDTH + ((CELL_WIDTH - MEGAS_WIDTH)/2), xPos * CELL_WIDTH + ((CELL_WIDTH - MEGAS_WIDTH)/2), MEGAS_WIDTH , MEGAS_WIDTH);
 	}
 }
 
