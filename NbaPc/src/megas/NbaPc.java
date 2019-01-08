@@ -116,15 +116,16 @@ public class NbaPc extends JFrame {
 	}
 	
 	public static void receiveParticlesInfo(DataInputStream dataInputStream) throws IOException {
-		
+		System.out.println("Particle transfer is starting...");
+
 		current_mod = dataInputStream.readInt();
-	
+		System.out.println("Current Mode " + current_mod);
+
 		if (current_mod != LOCALIZATION_MODE) {
 			return;
 		}
 	
 		boolean isFinished = false;
-		System.out.println("Particle transfer is starting...");
 		particles.clear();
 		
 		while(!isFinished) {
@@ -149,7 +150,8 @@ public class NbaPc extends JFrame {
 		
 		System.out.println("Map transfer is starting");
 		current_mod = dataInputStream.readInt();
-	
+		System.out.println("Current Mode " + current_mod);
+
 		if (current_mod != LOCALIZATION_MODE) {
 			return;
 		}
