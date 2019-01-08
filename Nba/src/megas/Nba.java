@@ -186,72 +186,72 @@ public class Nba {
 	
 	public static Cell explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
 		boolean[] walls = new boolean[4];
-		
-		// Take the measurements
-		// Front
-		int wall_readings = 0;
-		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
-			float measurement = getUltrasonicSensorValue();
-			if (measurement < WALL_DISTANCE) {
-				wall_readings++;
-			}
-		}
-		if (wall_readings > 2) {
-			walls[(0 + orientation)%4] = true;
-		}
-		else {
-			walls[(0 + orientation)%4] = false;
-		}
-		wall_readings = 0;
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		// Right
-		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
-			float measurement = getUltrasonicSensorValue();
-			if (measurement < WALL_DISTANCE) {
-				wall_readings++;
-			}
-		}
-		if (wall_readings > 2) {
-			walls[(1 + orientation)%4] = true;
-		}
-		else {
-			walls[(1 + orientation)%4] = false;
-		}
-		wall_readings = 0;
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		// Back
-		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
-			float measurement = getUltrasonicSensorValue();
-			if (measurement < WALL_DISTANCE) {
-				wall_readings++;
-			}
-		}
-		if (wall_readings > 2) {
-			walls[(2 + orientation)%4] = true;
-		}
-		else {
-			walls[(2 + orientation)%4] = false;
-		}
-		wall_readings = 0;
-		ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
-		// Left
-		for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
-			float measurement = getUltrasonicSensorValue();
-			if (measurement < WALL_DISTANCE) {
-				wall_readings++;
-			}
-		}
-		if (wall_readings > 2) {
-			walls[(3 + orientation)%4] = true;
-		}
-		else {
-			walls[(3 + orientation)%4] = false;
-		}
-		wall_readings = 0;
-		ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
-		
 		int colorId = ev3ColorAdapter.getColorID();
-		
+		if (colorId!=7) {
+			// Take the measurements
+			// Front
+			int wall_readings = 0;
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(0 + orientation)%4] = true;
+			}
+			else {
+				walls[(0 + orientation)%4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+			// Right
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(1 + orientation)%4] = true;
+			}
+			else {
+				walls[(1 + orientation)%4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
+			// Back
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(2 + orientation)%4] = true;
+			}
+			else {
+				walls[(2 + orientation)%4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
+			// Left
+			for(int i=0 ; i < MEASUREMENT_NUMBER ; i++) {
+				float measurement = getUltrasonicSensorValue();
+				if (measurement < WALL_DISTANCE) {
+					wall_readings++;
+				}
+			}
+			if (wall_readings > 2) {
+				walls[(3 + orientation)%4] = true;
+			}
+			else {
+				walls[(3 + orientation)%4] = false;
+			}
+			wall_readings = 0;
+			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);			
+		}
+
 		Cell cell = new Cell(colorId, walls);
 		
 		// Send the cell data to draw the map
@@ -367,8 +367,6 @@ public class Nba {
 			Point new_coordinates = stack.pop();
 			int manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
 		
-			// Kanka sanýrým burda hatamýz þu: Eðer geri baþladýðýmýz yere gitmek istiyosak, poplamamýz lazým.
-			// Ama ilk defa gidiyosak poplamamamýz lazým. Pushlamamýz lazým
 			System.out.println("===========================");
 			System.out.println("Current x: " + current_coordinates.x + "Current y: " + current_coordinates.y);
 			System.out.println("new x: " + new_coordinates.x + "new y: " + new_coordinates.y);
@@ -482,7 +480,6 @@ public class Nba {
 		Cell nextCell = map.getCellAt(next.x, next.y);
 		
 		boolean ret = false;
-		// Check next forwarddamý
 		if (current.x > next.x) {
 			ret = currentCell.frontWall;
 		} else if (current.x < next.x) {
@@ -565,133 +562,5 @@ public class Nba {
 		goForward(FULL_BLOCK);
 		orientation = 3;
 	}
-	/*
-	public static void goFromTo(Point start_coordinates, Point end_coordinates, Map map) {
-		Stack<Point> stack = new Stack<Point>();
-		HashMap<Point, Point> parentMap = new HashMap<Point,Point>();
-		Point current_coordinates = start_coordinates;
-		stack.push(current_coordinates);
-		ArrayList<Point> traversed = new ArrayList<Point>();
-		traversed.add(current_coordinates);
-		while(!stack.isEmpty()){
-			//Sound.playTone(500, 500);
-			current_coordinates = stack.pop();
-			if(current_coordinates.equals(end_coordinates)) {
-				break;
-			}
-			Cell current_cell = map.getCellAt(current_coordinates.x, current_coordinates.y);
-			if(current_cell.colorId != -1) {
-				if(!current_cell.frontWall) {
-					Point forward_coordinates = new Point(current_coordinates.x -1 , current_coordinates.y);
-					if(!traversed.contains(forward_coordinates)) {
-						stack.push(forward_coordinates);
-						if(parentMap.get(forward_coordinates)==null) {
-							parentMap.put(forward_coordinates, current_coordinates);
-						}
-					}
-
-				}
-				if(!current_cell.rightWall) {
-					Point right_coordinates = new Point(current_coordinates.x , current_coordinates.y+1);
-					if(!traversed.contains(right_coordinates)) {
-						stack.push(right_coordinates);
-						if(parentMap.get(right_coordinates)==null) {
-							parentMap.put(right_coordinates, current_coordinates);
-						}
-					}
-				}
-				if(!current_cell.backWall) {
-					Point back_coordinates = new Point(current_coordinates.x +1 , current_coordinates.y);
-					if(!traversed.contains(back_coordinates)) {
-						stack.push(back_coordinates);
-						if(parentMap.get(back_coordinates)==null) {
-							parentMap.put(back_coordinates, current_coordinates);
-						}
-					}
-				}
-				if(!current_cell.leftWall) {
-					Point left_coordinates = new Point(current_coordinates.x , current_coordinates.y-1);
-					if(!traversed.contains(left_coordinates)) {
-						stack.push(left_coordinates);
-						if(parentMap.get(left_coordinates)==null) {
-							parentMap.put(left_coordinates, current_coordinates);
-						}
-					}
-				}
-			}
-		}
-		//Sound.playTone(500, 500);
-		ArrayList<int[]> path = new ArrayList<int[]>();
-		while(!current_coordinates.equals(start_coordinates)) {
-			Point first_coordinates = new Point(parentMap.get(current_coordinates).x, parentMap.get(current_coordinates).y) ;
-			int[] path_coordinates = new int[4];
-			path_coordinates[0] = first_coordinates.x;
-			path_coordinates[1] = first_coordinates.y;
-			path_coordinates[2] = current_coordinates.x;
-			path_coordinates[3] = current_coordinates.y;
-			path.add(0, path_coordinates);
-			current_coordinates = first_coordinates;
-		}
-		//Sound.playTone(500, 500);
-		Iterator<int[]> iterator = path.iterator();
-		while(iterator.hasNext()) {
-			int[] path_coordinates = iterator.next();
-			if(path_coordinates[2] < path_coordinates[0]){
-				if(orientation==1) {
-					turnLeft();
-				}
-				else if(orientation==2) {
-					turnRight();
-					turnRight();
-				}
-				else if(orientation==3) {
-					turnRight();
-				}
-				goForward(FULL_BLOCK);
-			}
-			else if(path_coordinates[2] > path_coordinates[0]) {
-				if(orientation==3) {
-					turnLeft();
-				}
-				else if(orientation==0) {
-					turnRight();
-					turnRight();
-				}
-				else if(orientation==1) {
-					turnRight();
-				}
-				goForward(FULL_BLOCK);
-			}
-			else if(path_coordinates[3] > path_coordinates[1]) {
-				if(orientation==2) {
-					turnLeft();
-				}
-				else if(orientation==1) {
-					turnRight();
-					turnRight();
-				}
-				else if(orientation==0) {
-					turnRight();
-				}
-				goForward(FULL_BLOCK);
-			}
-			else if(path_coordinates[3] < path_coordinates[1]) {
-				if(orientation==0) {
-					turnLeft();
-				}
-				else if(orientation==1) {
-					turnRight();
-					turnRight();
-				}
-				else if(orientation==2) {
-					turnRight();
-				}
-				goForward(FULL_BLOCK);
-				
-			}
-			
-		}
-				
-	}
-	*/
+	
 }
