@@ -360,7 +360,7 @@ public class Nba {
 			// Kanka sanýrým burda hatamýz þu: Eðer geri baþladýðýmýz yere gitmek istiyosak, poplamamýz lazým.
 			// Ama ilk defa gidiyosak poplamamýz lazým. Pushlamamýz lazým
 			if (manhattan_distance > 1) {
-				while(manhattan_distance > 0) {	// Burasý büyüktür 1 olabilir.
+				while(manhattan_distance > 1) {	// Burasý büyüktür 0 da olabilir.
 					int direction = traversed_directions.pop();
 					switch (direction) {
 						case 0: 

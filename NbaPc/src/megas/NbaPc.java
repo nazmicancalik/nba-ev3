@@ -35,7 +35,7 @@ public class NbaPc extends JFrame {
 	public static final int FRAME_HEIGHT = CELL_WIDTH * 7;
 
 	public static final Color MEGAS_COLOR = Color.ORANGE;
-	public static final Color WALL_COLOR = Color.BLACK;
+	public static final Color WALL_COLOR = Color.YELLOW;
 	public static final Color BACKGROUND_COLOR = Color.GRAY;
 	public static final Color STRIPE_COLOR = Color.DARK_GRAY;
 	
@@ -56,9 +56,9 @@ public class NbaPc extends JFrame {
 	public NbaPc() {
 		super("Map Making");
 		setSize(FRAME_WIDTH, FRAME_HEIGHT);
-		setResizable(false);
+		setBackground(BACKGROUND_COLOR);
+		setResizable(true);
 		setVisible(true);
-		
 		map = new Map();
 	}
 	
@@ -126,61 +126,72 @@ public class NbaPc extends JFrame {
 	public void displayMap( Map map, Graphics g ){
 		Graphics2D g2 = (Graphics2D) g;
 
-		// Draw stripes
-		g2.setColor(Color.RED);
-		g2.setStroke( new BasicStroke( 3.0f ));
-		
-		// Vertical Lines
-		for(int i = 1; i<= 6; i++) {
-			g2.draw(new Line2D.Double(i*CELL_WIDTH, i*CELL_WIDTH, 0, FRAME_HEIGHT));
-		}
-		
-		// Horizontal Lines
-		for(int i = 1; i<= 6; i++) {
-			g2.draw(new Line2D.Double(0, FRAME_WIDTH, i*CELL_WIDTH, i*CELL_WIDTH));	
-		}
-		
 		// Draw Cells
 		for (int i = 0; i < map.getMap().length; i++ ){
 			for (int j = 0; j < map.getMap()[0].length; j++) {
 				// Draw a cell according to the cell data
 				Cell currentCell = map.getCellAt(i, j);
-				Color color = BACKGROUND_COLOR;
-				
+
+				Color color = Color.GRAY;
 				// If the cell is visited then get the color from inside.
-				if (!currentCell.isVisited) {
-					color = new Color(map.getCellAt(i, j).colorId);	
+				if (currentCell.isVisited) {
+					color = new Color(map.getCellAt(i, j).colorId);
+					System.out.println(color.toString());
 				}
+				
 				g2.setColor(color);
-				g2.drawRect(i * CELL_WIDTH, (7-j) * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
+				// g2.setPaint(color);
+				
+				// g2.drawRect(i * CELL_WIDTH, (7-j) * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
 				g2.fillRect(i * CELL_WIDTH, (7-j) * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
 				
 				// Draw the walls
-				g2.setStroke(new BasicStroke(3.0f));
+				g2.setStroke(new BasicStroke(10.0f));
 				
 				// Front Wall
 				if (currentCell.frontWall) {
-					g2.setPaint(WALL_COLOR);
-					g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j)*CELL_WIDTH));
+					g2.setColor(WALL_COLOR);
+					// g2.drawLine(i*CELL_WIDTH,(7-j)*CELL_WIDTH,(i+1)*CELL_WIDTH,(7-j)*CELL_WIDTH);
+					g2.draw(new Line2D.Double(i*CELL_WIDTH,j*CELL_WIDTH,(i+1)*CELL_WIDTH,j*CELL_WIDTH));	
 				}
 				
 				// Right Wall
-				if (currentCell.frontWall) {
-					g2.setPaint(WALL_COLOR);
-					g2.draw(new Line2D.Double( (i+1)*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j-1)*CELL_WIDTH));
+				if (currentCell.rightWall) {
+					g2.setColor(WALL_COLOR);
+					// g.drawLine((i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH,(i+1)*CELL_WIDTH,  (7-j-1)*CELL_WIDTH);
+					g2.draw(new Line2D.Double((i+1)*CELL_WIDTH, j*CELL_WIDTH,(i+1)*CELL_WIDTH,  j+1*CELL_WIDTH));	
 				}
 				
 				// Back Wall
-				if (currentCell.frontWall) {
-					g2.setPaint(WALL_COLOR);
-					g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j) * CELL_WIDTH, (7-j-1)*CELL_WIDTH));
+				if (currentCell.backWall) {
+					g2.setColor(WALL_COLOR);
+					// g.drawLine(i*CELL_WIDTH,(7-j) * CELL_WIDTH,(i+1)*CELL_WIDTH, (7-j-1)*CELL_WIDTH);
+					g2.draw(new Line2D.Double(i*CELL_WIDTH,(j+1) * CELL_WIDTH,(i+1)*CELL_WIDTH, (j+1) *CELL_WIDTH));
 				}
+				
 				// Left Wall
-				if (currentCell.frontWall) {
-					g2.setPaint(WALL_COLOR);
-					g2.draw(new Line2D.Double(i*CELL_WIDTH, i*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j-1)*CELL_WIDTH));
+				if (currentCell.leftWall) {
+					g2.setColor(WALL_COLOR);
+					// g.drawLine(i*CELL_WIDTH,(7-j)*CELL_WIDTH,i*CELL_WIDTH, (7-j-1)*CELL_WIDTH);
+					g2.draw(new Line2D.Double(i*CELL_WIDTH,j*CELL_WIDTH,i*CELL_WIDTH, j+1*CELL_WIDTH));
 				}
 			}
+		}
+		
+		// Draw stripes
+		g2.setColor(STRIPE_COLOR);
+		g2.setStroke( new BasicStroke(0.5f));
+		
+		// Vertical Lines
+		for(int i = 1; i<= 6; i++) {
+			// g2.drawLine(i*CELL_WIDTH, 0, i*CELL_WIDTH, FRAME_HEIGHT);
+			g2.draw(new Line2D.Double(i*CELL_WIDTH, 0, i*CELL_WIDTH, FRAME_HEIGHT));
+		}
+		
+		// Horizontal Lines
+		for(int i = 1; i<= 6; i++) {
+			// g2.drawLine(0,i*CELL_WIDTH,FRAME_WIDTH, i*CELL_WIDTH);
+			g2.draw(new Line2D.Double(0,i*CELL_WIDTH,FRAME_WIDTH, i*CELL_WIDTH));
 		}
 	}
 	
