@@ -184,6 +184,7 @@ public class Nba {
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		Button.waitForAnyPress();
 		
+		/*
 		// ============ MAP MAKING ============ 
 		Map map = new Map();
 		System.out.println(map.toString());
@@ -197,9 +198,11 @@ public class Nba {
 		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
+		*/
 		
 		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
+		Map map = new Map();
 		dataOutputStream.writeInt(current_mod);
 		map.ReadObjectFromFile(filepath);
 		System.out.println(map.toString());
