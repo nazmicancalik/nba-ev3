@@ -183,25 +183,22 @@ public class Nba {
 		OutputStream outputStream = client.getOutputStream();
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		Button.waitForAnyPress();
-		//turnRight();
-		//turnRight();
-		//turnLeft();
-		//goForward(-FULL_BLOCK);
+		
+		// ============ MAP MAKING ============ 
 		Map map = new Map();
 		System.out.println(map.toString());
-		//map = dfs(ultrasonicSensorMotor, dataOutputStream);
-		
+		map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		current_mod = MAPPING_MODE;
 		dataOutputStream.writeInt(current_mod);
 		map.writeObjectToFile(filepath);
 		System.out.println(map.toString());
 		
-		/*
 		graphicsLCD.clear();
 		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
-		*/
+		
+		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
 		dataOutputStream.writeInt(current_mod);
 		map.ReadObjectFromFile(filepath);
@@ -619,7 +616,7 @@ public class Nba {
 		}
 		
 		// Eliminate Particles until we find where we are.
-		while(particles.size() != 1) {
+		while(particles.size() < 2) {	// TODO
 			sendParticles(particles, dataOutputStream);
 			Cell current_cell = exploreParticles(ultrasonicSensorMotor, particles, map);
 			if(particles.size() > 1){
