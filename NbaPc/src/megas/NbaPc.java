@@ -141,7 +141,7 @@ public class NbaPc extends JFrame {
 					color = new Color(map.getCellAt(i, j).colorId);	
 				}
 				g2.setColor(color);
-				g2.fillRect(i * CELL_WIDTH, j * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
+				g2.fillRect(i * CELL_WIDTH, (7-j) * CELL_WIDTH , CELL_WIDTH, CELL_WIDTH);
 				
 				// Draw the walls
 				g2.setStroke(new BasicStroke(5.0f));
