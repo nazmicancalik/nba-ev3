@@ -151,28 +151,28 @@ public class NbaPc extends JFrame {
 				if (currentCell.frontWall) {
 					g2.setPaint(WALL_COLOR);
 				}
-				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, j*CELL_WIDTH, j*CELL_WIDTH));
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j)*CELL_WIDTH));
 				
 				// Right Wall
 				g2.setPaint(STRIPE_COLOR);
 				if (currentCell.frontWall) {
 					g2.setPaint(WALL_COLOR);
 				}
-				g2.draw(new Line2D.Double( (i+1)*CELL_WIDTH, (i+1)*CELL_WIDTH, j*CELL_WIDTH, (j+1)*CELL_WIDTH));
+				g2.draw(new Line2D.Double( (i+1)*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j-1)*CELL_WIDTH));
 				
 				// Back Wall
 				g2.setPaint(STRIPE_COLOR);
 				if (currentCell.frontWall) {
 					g2.setPaint(WALL_COLOR);
 				}
-				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, j * CELL_WIDTH, (j+1)*CELL_WIDTH));
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, (i+1)*CELL_WIDTH, (7-j) * CELL_WIDTH, (7-j-1)*CELL_WIDTH));
 				
 				// Left Wall
 				g2.setPaint(STRIPE_COLOR);
 				if (currentCell.frontWall) {
 					g2.setPaint(WALL_COLOR);
 				}
-				g2.draw(new Line2D.Double(i*CELL_WIDTH, i*CELL_WIDTH, j*CELL_WIDTH, (j+1)*CELL_WIDTH));
+				g2.draw(new Line2D.Double(i*CELL_WIDTH, i*CELL_WIDTH, (7-j)*CELL_WIDTH, (7-j-1)*CELL_WIDTH));
 			}
 		}
 	}
