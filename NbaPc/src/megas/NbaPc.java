@@ -141,6 +141,10 @@ public class NbaPc extends JFrame {
 					} else if (colorId == 1) {
 						color = Color.GREEN;
 					} else if (colorId == 2) {
+						color = Color.BLUE;
+					} else if(colorId ==7) {
+						color = Color.BLACK;
+					} else if(colorId ==0) {
 						color = Color.RED;
 					}
 					

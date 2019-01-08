@@ -57,7 +57,7 @@ public class Nba {
 	// ========================== DISTANCES ============================
 	// =================================================================
 	public static final int HALF_BLOCK = 12;
-	public static final int FULL_BLOCK = 33;
+	public static final int FULL_BLOCK = 31;
 
 	
 	// =================================================================
@@ -88,7 +88,7 @@ public class Nba {
 	public static final int ULTRASONIC_ROTATE_RIGHT = 90;
 	public static final int ULTRASONIC_ROTATE_LEFT = -90;
 	public static final int MEASUREMENT_NUMBER = 5;
-	public static final float WALL_DISTANCE = 20.0f;
+	public static final float WALL_DISTANCE = 30.0f;
 	
 	// =================================================================
 	// ==================== GYRO ROTATING ANGLEs =======================
@@ -173,8 +173,10 @@ public class Nba {
 		OutputStream outputStream = client.getOutputStream();
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		Button.waitForAnyPress();
-		
-		dfs(ultrasonicSensorMotor, dataOutputStream);
+		//turnRight();
+		//turnRight();
+		//turnLeft();
+		Map map = dfs(ultrasonicSensorMotor, dataOutputStream);
 		dataOutputStream.close();
 		serverSocket.close();
 	}
@@ -304,6 +306,9 @@ public class Nba {
 		}else if (gyro_value < RIGHT_ROTATE_GYRO_ANGLE - 1) {
 			pilot.rotate(RIGHT_ROTATE_GYRO_ANGLE - gyro_value);
 		}
+		
+		gyroSensor.reset();
+
 	}
 	
 	public static void turnLeft() {
@@ -321,6 +326,9 @@ public class Nba {
 		}else if (gyro_value < LEFT_ROTATE_GYRO_ANGLE - 1) {
 			pilot.rotate(LEFT_ROTATE_GYRO_ANGLE - gyro_value);
 		}
+		
+		gyroSensor.reset();
+
 	}
 	
 	public static void goForward(int distance) {
@@ -330,6 +338,7 @@ public class Nba {
 		if (Math.abs(gyro_value)>ANGLE_CORRECTION_THRESHOLD) {
 			pilot.rotate(-gyro_value);
 		}
+		gyroSensor.reset();
 	}
 	
 	public static float getGyroSensorValue() {
@@ -358,53 +367,70 @@ public class Nba {
 			int manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
 		
 			// Kanka sanýrým burda hatamýz þu: Eðer geri baþladýðýmýz yere gitmek istiyosak, poplamamýz lazým.
-			// Ama ilk defa gidiyosak poplamamýz lazým. Pushlamamýz lazým
+			// Ama ilk defa gidiyosak poplamamamýz lazým. Pushlamamýz lazým
+			System.out.println("===========================");
+			System.out.println("Current x: " + current_coordinates.x + "Current y: " + current_coordinates.y);
+			System.out.println("new x: " + new_coordinates.x + "new y: " + new_coordinates.y);
+			System.out.println("Manhattan Distance: " + manhattan_distance);
+			System.out.println("===========================");
 			if (manhattan_distance > 1) {
-				while(manhattan_distance > 0) {	// Burasý büyüktür 0 da olabilir.
+				while(manhattan_distance > 1 || checkIfThereIsWallBetween(map, current_coordinates,new_coordinates)) {	// Burasý kesin büyüktür 1 olmalý.
+					
 					int direction = traversed_directions.pop();
-					switch (direction) {
-						case 0: 
-							// traversed_directions.push(2);
-							changeOrientationAndGoUp();
-							current_coordinates.x = current_coordinates.x - 1;
-						case 1: 
-							// traversed_directions.push(3);
-							changeOrientationAndGoRight();
-							current_coordinates.y = current_coordinates.y + 1;
-						case 2: 
-							// traversed_directions.push(0);
-							changeOrientationAndGoDown();
-							current_coordinates.x = current_coordinates.x + 1;
-						case 3: 
-							// traversed_directions.push(1);
-							changeOrientationAndGoLeft();
-							current_coordinates.y = current_coordinates.y - 1;
+					System.out.println("#########################");
+					System.out.println("Manhattan Distance: " + manhattan_distance);
+					System.out.println("Direction: " + direction);
+					System.out.println("Pre Orientation: " + orientation);
+					System.out.println("#########################");
+					
+					if (direction == 0) {
+						changeOrientationAndGoUp();
+						System.out.println("-----------------");
+						System.out.println("GO UP");
+						current_coordinates.x = current_coordinates.x - 1;
+					} else if (direction == 1) {
+						changeOrientationAndGoRight();
+						System.out.println("-----------------");
+						System.out.println("GO RIGHT");
+						current_coordinates.y = current_coordinates.y + 1;
+					} else if (direction == 2) {
+						System.out.println("-----------------");
+						System.out.println("GO DOWN");
+						changeOrientationAndGoDown();
+						current_coordinates.x = current_coordinates.x + 1;
+					} else if (direction == 3) {
+						System.out.println("-----------------");
+						System.out.println("GO LEFT");
+						changeOrientationAndGoLeft();
+						current_coordinates.y = current_coordinates.y - 1;
 					}
+					System.out.println("-----------------");
+					System.out.println("After turning Orientation: " + orientation);
 					manhattan_distance = Math.abs(new_coordinates.x - current_coordinates.x) + Math.abs(new_coordinates.y - current_coordinates.y);
 				}
 			}
-			else {
-				if(new_coordinates.x < current_coordinates.x){
-					// Go up
-					traversed_directions.push(2);
-					changeOrientationAndGoUp();
-				}
-				else if(new_coordinates.x > current_coordinates.x) {
-					// Go down
-					traversed_directions.push(0);
-					changeOrientationAndGoDown();
-				}
-				else if(new_coordinates.y > current_coordinates.y) {
-					// Go right
-					traversed_directions.push(3);
-					changeOrientationAndGoRight();
-				}
-				else if(new_coordinates.y < current_coordinates.y) {
-					// Go left
-					traversed_directions.push(1);
-					changeOrientationAndGoLeft();
-				}
+			
+			if(new_coordinates.x < current_coordinates.x){
+				// Go up
+				traversed_directions.push(2);
+				changeOrientationAndGoUp();
 			}
+			else if(new_coordinates.x > current_coordinates.x) {
+				// Go down
+				traversed_directions.push(0);
+				changeOrientationAndGoDown();
+			}
+			else if(new_coordinates.y > current_coordinates.y) {
+				// Go right
+				traversed_directions.push(3);
+				changeOrientationAndGoRight();
+			}
+			else if(new_coordinates.y < current_coordinates.y) {
+				// Go left
+				traversed_directions.push(1);
+				changeOrientationAndGoLeft();
+			}
+		
 
 			current_coordinates = new_coordinates;
 			xPos = current_coordinates.x;
@@ -442,6 +468,29 @@ public class Nba {
 		return map;
 	}
 	
+	public static boolean checkIfThereIsWallBetween(Map map, Point current, Point next) {
+		Cell currentCell = map.getCellAt(current.x, current.y);
+		Cell nextCell = map.getCellAt(next.x, next.y);
+		
+		boolean ret = false;
+		// Check next forwarddamý
+		if (current.x > next.x) {
+			ret = currentCell.frontWall;
+		} else if (current.x < next.x) {
+			ret = currentCell.backWall;
+		} else if (current.y > next.y) {
+			ret = currentCell.leftWall;
+		} else if (current.y < next.y) {
+			ret = currentCell.rightWall;
+		}
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		System.out.println("Current x: " + current.x + "Current y: " + current.y);
+		System.out.println("next x: " + next.x + "next y: " + next.y);
+		System.out.println(ret);
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		return ret;
+	}
+	
 	public static void changeOrientationAndGoUp() {
 		if(orientation==1) {
 			turnLeft();
@@ -455,6 +504,7 @@ public class Nba {
 		}
 		
 		goForward(FULL_BLOCK);
+		orientation = 0;
 	}
 	
 	public static void changeOrientationAndGoDown() {
@@ -470,6 +520,8 @@ public class Nba {
 		}
 		
 		goForward(FULL_BLOCK);
+		orientation = 2;
+
 	}
 	
 	public static void changeOrientationAndGoRight() {
@@ -485,6 +537,8 @@ public class Nba {
 		}
 
 		goForward(FULL_BLOCK);
+		orientation = 1;
+
 	}
 	
 	public static void changeOrientationAndGoLeft() {
@@ -500,6 +554,7 @@ public class Nba {
 		}
 		
 		goForward(FULL_BLOCK);
+		orientation = 3;
 	}
 	/*
 	public static void goFromTo(Point start_coordinates, Point end_coordinates, Map map) {
