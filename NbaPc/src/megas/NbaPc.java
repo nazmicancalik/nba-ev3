@@ -32,7 +32,7 @@ public class NbaPc extends JFrame {
 	// =================================================================
 	public static final int CELL_WIDTH = 100;
 	public static final int MEGAS_WIDTH = 50;
-	public static final int PARTICLE_WIDTH = 20;
+	public static final int PARTICLE_WIDTH = 10;
 	public static final int PARTICLE_PADDING = 10;
 	
 	
@@ -47,6 +47,7 @@ public class NbaPc extends JFrame {
 	
 	public static final int MAPPING_MODE = 0;
 	public static final int LOCALIZATION_MODE = 1;
+	public static final int GO_TO_BALL_MODE = 2;
 	
 	// =================================================================
 	// ========================= POSITION INFO =========================
@@ -115,6 +116,27 @@ public class NbaPc extends JFrame {
 			dataOutputStream.flush();
 		}
 		
+		// Get particles.
+		while(current_mod == GO_TO_BALL_MODE) {
+			receiveGoToBallInfo(dataInputStream);
+			monitor.repaint();
+			dataOutputStream.flush();
+		}
+		
+	}
+	
+	public static void receiveGoToBallInfo(DataInputStream dataInputStream) throws IOException {
+		System.out.println("Go to ball behavior is starting...");
+
+		current_mod = dataInputStream.readInt();
+		System.out.println("Current Mode " + current_mod);
+
+		if (current_mod != GO_TO_BALL_MODE) {
+			return;
+		}
+		
+		xPos = dataInputStream.readInt();
+		yPos = dataInputStream.readInt();
 	}
 	
 	public static void receiveParticlesInfo(DataInputStream dataInputStream) throws IOException {
@@ -181,7 +203,7 @@ public class NbaPc extends JFrame {
 				System.out.println("*****************");
 
 				Cell cell = new Cell(colorId, walls);
-				cell.isVisited = false;
+				cell.isVisited = true;
 				map.addCell(cell, xCoordinate, yCoordinate);
 				boolean isFinished = dataInputStream.readBoolean();
 			}
@@ -232,6 +254,9 @@ public class NbaPc extends JFrame {
 		} else if (current_mod == LOCALIZATION_MODE) {
 			displayMap(map,g);
 			displayParticles(g);
+		} else if (current_mod == GO_TO_BALL_MODE) {
+			displayMap(map,g);
+			displayMegas(xPos,yPos,g);
 		}
 	}
 

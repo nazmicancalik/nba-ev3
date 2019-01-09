@@ -21,11 +21,14 @@ public class Map implements Serializable{
 	
 	public Point green_coordinates;
 	public Point red_coordinates;
+	public Point blue_coordinates;
 
 	public Map() {
 		map = new Cell[MAP_WIDTH][MAP_WIDTH];
 		green_coordinates = new Point(-1, -1);
 		red_coordinates = new Point(-1, -1);
+		blue_coordinates = new Point(-1, -1);
+
 		initializeMap();
 	}
 	
