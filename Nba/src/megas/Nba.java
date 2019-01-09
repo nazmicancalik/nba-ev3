@@ -926,6 +926,8 @@ public class Nba {
 	public static void goToBall(DataOutputStream dataOutputStream, Map map) throws IOException {
 		System.out.println("GO TO BALL ENTERED");
 		Point end_point = map.green_coordinates;
+		System.out.println("xPos: " + xPos);
+		System.out.println("yPos: " + yPos);
 		Point start_point = new Point(xPos, yPos);
 		boolean grab_ball = true;
 		boolean let_go_ball = false;
@@ -947,16 +949,16 @@ public class Nba {
 			
 			sendPositionDataOnPath(dataOutputStream);
 			
-			if(route.get(0)==0){
+			if(route.get(i)==0){
 				changeOrientationAndGoUp();
 			}
-			else if(route.get(0)==1) {
+			else if(route.get(i)==1) {
 				changeOrientationAndGoRight();
 			}
-			else if(route.get(0)==2) {
+			else if(route.get(i)==2) {
 				changeOrientationAndGoDown();
 			}
-			else if(route.get(0)==3) {
+			else if(route.get(i)==3) {
 				changeOrientationAndGoLeft();
 			}
 		}
@@ -971,15 +973,23 @@ public class Nba {
 		ArrayList<int[]> parent_list = new ArrayList<int[]>();
 		
 		cell_stack.push(current_point);
+		Stack<Point> traversed_stack = new Stack<Point>();
 
+		System.out.println("END POINT : " + end_point.x + " " + end_point.y);
 		while(!cell_stack.isEmpty()) {
 			current_point = cell_stack.pop();
+			traversed_stack.push(current_point);
+			System.out.println("CURRENT POINT : " + current_point.x + " " + current_point.y);
 			Cell current_cell = map.getCellAt(current_point.x, current_point.y);
 			if(current_cell.colorId != 7) {
 				if(!current_cell.frontWall) {
 					Point child = new Point(current_point.x-1, current_point.y);
 					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 0};
 					parent_list.add(parent_info);
+					if(!cell_stack.contains(child) && !traversed_stack.contains(child)) {
+						cell_stack.push(child);
+					}
+					System.out.println("CHILD POINT : " + child.x + " " + child.y);
 					if(child.equals(end_point)) {
 						break;
 					}
@@ -989,6 +999,10 @@ public class Nba {
 					Point child = new Point(current_point.x, current_point.y+1);
 					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 1};
 					parent_list.add(parent_info);
+					if(!cell_stack.contains(child)&& !traversed_stack.contains(child)) {
+						cell_stack.push(child);
+					}
+					System.out.println("CHILD POINT : " + child.x + " " + child.y);
 					if(child.equals(end_point)) {
 						break;
 					}
@@ -997,6 +1011,10 @@ public class Nba {
 					Point child = new Point(current_point.x+1, current_point.y);
 					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 2};
 					parent_list.add(parent_info);
+					if(!cell_stack.contains(child)&& !traversed_stack.contains(child)) {
+						cell_stack.push(child);
+					}
+					System.out.println("CHILD POINT : " + child.x + " " + child.y);
 					if(child.equals(end_point)) {
 						break;
 					}
@@ -1005,6 +1023,10 @@ public class Nba {
 					Point child = new Point(current_point.x, current_point.y-1);
 					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 3};
 					parent_list.add(parent_info);
+					if(!cell_stack.contains(child) && !traversed_stack.contains(child)) {
+						cell_stack.push(child);
+					}
+					System.out.println("CHILD POINT : " + child.x + " " + child.y);
 					if(child.equals(end_point)) {
 						break;
 					}
@@ -1021,13 +1043,17 @@ public class Nba {
 		ArrayList<Integer> path = new ArrayList<Integer>();
 		
 		while(!current_point.equals(start_point)) {
-			System.out.println("PARENT'S LIST");
+			System.out.println(",,,,,,,,,,,,,,,,,,,");
+			System.out.println("START: " + start_point.x + " " + start_point.y );
+			System.out.println("CURRENT: " + current_point.x + " " + current_point.y );
+			System.out.println(",,,,,,,,,,,,,,,,,,,");
+
 			for(int i = 0; i < parent_list.size(); i++) {
 				int[] currentListItem = parent_list.get(i);
-				
 				// Construct the points from the parent list item (array).
 				Point cur_first = new Point(currentListItem[0],currentListItem[1]);
 				Point cur_second = new Point(currentListItem[2],currentListItem[3]);
+				System.out.println("CUR_SECOND: " + cur_second.x + " " + cur_second.y );
 				if (cur_second.equals(current_point)) {
 					path.add(0, currentListItem[4]);	// Add the direction
 					current_point = cur_first;
@@ -1040,7 +1066,7 @@ public class Nba {
 	}
 	
 	public static void sendPositionDataOnPath(DataOutputStream dataOutputStream) throws IOException {
-		
+		System.out.println("Send Position Data On Path");
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
 		dataOutputStream.writeInt(xPos);
