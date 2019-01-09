@@ -650,39 +650,46 @@ public class Nba {
 		
 		System.out.println("PARTICLES SIZE " + particles.size());
 		// Eliminate Particles until we find where we are.
+		int previous_direction = -1;
 		while(particles.size() > 1) {	// TODO
+			sendParticles(particles, dataOutputStream);
 			Cell current_cell = exploreParticles(ultrasonicSensorMotor, particles, map);
 			sendParticles(particles, dataOutputStream);
 			if(particles.size() > 1){
 				// Robotu ve particlelarý update et hareket edip
-				if(!current_cell.frontWall) {
-					goForward(FULL_BLOCK);
+				if(!current_cell.frontWall && (previous_direction!=2)) {
+					changeOrientationAndGoUp();
+					orientation=0;
 					int turnDirection = 0;
 					moveParticles(particles, turnDirection);
+					previous_direction = turnDirection;
 				}
-				else if(!current_cell.rightWall){
-					turnRight();
-					goForward(FULL_BLOCK);
+				else if(!current_cell.rightWall&& (previous_direction!=3)){
+					changeOrientationAndGoRight();
+					orientation=0;
 					int turnDirection = 1;
 					moveParticles(particles, turnDirection);
+					previous_direction = turnDirection;
 				}
-				else if(!current_cell.backWall){
-					turnRight();
-					turnRight();
-					goForward(FULL_BLOCK);
+				else if(!current_cell.backWall&& (previous_direction!=0)){
+					changeOrientationAndGoDown();
+					orientation=0;
 					int turnDirection = 2;
 					moveParticles(particles, turnDirection);
+					previous_direction = turnDirection;
 				}
-				else if(!current_cell.leftWall){
-					turnLeft();
-					goForward(FULL_BLOCK);
+				else if(!current_cell.leftWall&& (previous_direction!=1)){
+					changeOrientationAndGoLeft();
+					orientation=0;
 					int turnDirection = 3;
 					moveParticles(particles, turnDirection);
+					previous_direction = turnDirection;
 				}
 			}
 		}
 		System.out.println("LAST PARTICLE");
 		sendParticles(particles, dataOutputStream);
+		System.out.println(particles.size());
 		Delay.msDelay(500);
 		int[] position = particles.get(0);
 		xPos = position[0];
@@ -866,16 +873,19 @@ public class Nba {
 			wall_readings = 0;
 			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);			
 		}
-		
+		System.out.println("--------------PARTICLE ELIMINATION-----------");
 		ListIterator<int[]> iterator = particles.listIterator();	// TODO Caným sýkýldý.
 		while(iterator.hasNext()) {
 			int [] current_particle = iterator.next();
 			int particle_orientation = current_particle[2];
 			
 			Cell particle_cell = map.getCellAt(current_particle[0], current_particle[1]);
-			
+			System.out.println(" CURRENT PARTICLE ");
+			System.out.println(current_particle[0] + " " + current_particle[1] + " " + current_particle[2]);
+
 			// Eliminate the particle if the color is wrong.
 			if (particle_cell.colorId !=colorId) {
+				System.out.println(" REMOVED COLOR ");
 				iterator.remove();
 			}
 			else {
@@ -906,15 +916,19 @@ public class Nba {
 				}
 				
 				if(walls[wallCheck[0]] != particle_cell.frontWall) {
+					System.out.println(" REMOVED FRONT");
 					iterator.remove();
 				}
 				else if(walls[wallCheck[1]] != particle_cell.rightWall) {
+					System.out.println(" REMOVED RIGHT");
 					iterator.remove();
 				}
 				else if(walls[wallCheck[2]] != particle_cell.backWall) {
+					System.out.println(" REMOVED BACK");
 					iterator.remove();
 				}
 				else if(walls[wallCheck[3]] != particle_cell.leftWall) {
+					System.out.println(" REMOVED LEFT");
 					iterator.remove();
 				}
 			}
@@ -950,17 +964,22 @@ public class Nba {
 			sendPositionDataOnPath(dataOutputStream);
 			
 			if(route.get(i)==0){
+				xPos = xPos - 1;
 				changeOrientationAndGoUp();
 			}
 			else if(route.get(i)==1) {
+				yPos = yPos + 1;
 				changeOrientationAndGoRight();
 			}
 			else if(route.get(i)==2) {
+				xPos = xPos + 1;
 				changeOrientationAndGoDown();
 			}
 			else if(route.get(i)==3) {
+				yPos = yPos - 1;
 				changeOrientationAndGoLeft();
 			}
+			sendPositionDataOnPath(dataOutputStream);
 		}
 		
 		System.out.println("GO FROM TO EXIT");
