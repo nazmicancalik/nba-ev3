@@ -135,7 +135,7 @@ public class Nba {
 
 	static Map map;
 	static boolean isFinished = false;
-	static int ballColor = 0; 	// DEFAULT BALL COLOR IS RED
+	static int ballColor = Utils.RED_BALL_CODE; 	// DEFAULT BALL COLOR IS RED
 	
 	static Utils utils = new Utils();
 	
@@ -394,9 +394,10 @@ public class Nba {
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
 		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
-		pilot.travel(FULL_BLOCK);	// TODO: This might need to be increased.
+		pilot.travel(FULL_BLOCK-QUARTER_BLOCK);	// TODO: This might need to be increased.
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
+		pilot.travel(-FULL_BLOCK+QUARTER_BLOCK);
 		
 		// If it determines the ball's color then updates the static field.
 		ballColor = Utils.determineBallColor(graphicsLCD);
@@ -1336,6 +1337,7 @@ public class Nba {
 			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
 			// Then grab the ball
 			grabTheBall(graphicsLCD,mediumMotor);
+			
 		} else if(let_go_ball) {
 			int lastMovement = route.get(route.size() - 1);
 			if(lastMovement == 0){
