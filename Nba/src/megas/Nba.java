@@ -123,7 +123,8 @@ public class Nba {
 	
 	public static final int MAPPING_MODE = 0;
 	public static final int LOCALIZATION_MODE = 1;
-	
+	public static final int GO_TO_BALL_MODE = 2;
+
 	static int current_mod = MAPPING_MODE; // mapping
 
 
@@ -200,8 +201,8 @@ public class Nba {
 		graphicsLCD.drawString("PRESS TO LOCALIZE", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		Button.waitForAnyPress();
-	
 		*/
+		
 		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
 		Map map = new Map();
@@ -214,8 +215,19 @@ public class Nba {
 		graphicsLCD.drawString("MAP IS LOADED", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		localize(ultrasonicSensorMotor, dataOutputStream, map);
+		
+		
+		
+		// ============= GO TO BALL =============
+		current_mod = GO_TO_BALL_MODE;
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		
+		goToBall(dataOutputStream, map);
 		dataOutputStream.close();
 		serverSocket.close();
+		
+		
 	}
 	
 	public static Cell explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
@@ -491,6 +503,10 @@ public class Nba {
 				map.red_coordinates = new Point(current_coordinates.x, current_coordinates.y);
 
 			}
+			else if (current_cell.colorId == 2){ //BLUE
+				map.blue_coordinates = new Point(current_coordinates.x, current_coordinates.y);
+
+			}
 			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
 			if (current_cell.colorId != 7) {
 				if(!current_cell.frontWall) {
@@ -635,8 +651,8 @@ public class Nba {
 		System.out.println("PARTICLES SIZE " + particles.size());
 		// Eliminate Particles until we find where we are.
 		while(particles.size() > 1) {	// TODO
-			sendParticles(particles, dataOutputStream);
 			Cell current_cell = exploreParticles(ultrasonicSensorMotor, particles, map);
+			sendParticles(particles, dataOutputStream);
 			if(particles.size() > 1){
 				// Robotu ve particlelarý update et hareket edip
 				if(!current_cell.frontWall) {
@@ -665,6 +681,9 @@ public class Nba {
 				}
 			}
 		}
+		System.out.println("LAST PARTICLE");
+		sendParticles(particles, dataOutputStream);
+		Delay.msDelay(500);
 		int[] position = particles.get(0);
 		xPos = position[0];
 		yPos = position[1];
@@ -904,8 +923,129 @@ public class Nba {
 		return cell;
 	}	
 	
-	public static void goFromTo(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map, Point start_point, Point end_point) {
-		
+	public static void goToBall(DataOutputStream dataOutputStream, Map map) throws IOException {
+		System.out.println("GO TO BALL ENTERED");
+		Point end_point = map.green_coordinates;
+		Point start_point = new Point(xPos, yPos);
+		boolean grab_ball = true;
+		boolean let_go_ball = false;
+		goFromTo(dataOutputStream, map, start_point, end_point, grab_ball, let_go_ball);
+		System.out.println("GO TO BALL EXIT");
+
 	}
 	
+	public static void goFromTo(DataOutputStream dataOutputStream,
+			Map map,
+			Point start_point,
+			Point end_point,
+			boolean grab_ball,
+			boolean let_go_ball) throws IOException {
+		System.out.println("GO FROM TO ENTER");
+
+		ArrayList<Integer> route = pathFinder(map, start_point, end_point);
+		for(int i = 0; i<route.size(); i++) {
+			
+			sendPositionDataOnPath(dataOutputStream);
+			
+			if(route.get(0)==0){
+				changeOrientationAndGoUp();
+			}
+			else if(route.get(0)==1) {
+				changeOrientationAndGoRight();
+			}
+			else if(route.get(0)==2) {
+				changeOrientationAndGoDown();
+			}
+			else if(route.get(0)==3) {
+				changeOrientationAndGoLeft();
+			}
+		}
+		
+		System.out.println("GO FROM TO EXIT");
+
+	}
+	
+	public static ArrayList<Integer> pathFinder(Map map, Point start_point, Point end_point){
+		Point current_point = start_point;
+		Stack<Point> cell_stack = new Stack<Point>();
+		ArrayList<int[]> parent_list = new ArrayList<int[]>();
+		
+		cell_stack.push(current_point);
+
+		while(!cell_stack.isEmpty()) {
+			current_point = cell_stack.pop();
+			Cell current_cell = map.getCellAt(current_point.x, current_point.y);
+			if(current_cell.colorId != 7) {
+				if(!current_cell.frontWall) {
+					Point child = new Point(current_point.x-1, current_point.y);
+					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 0};
+					parent_list.add(parent_info);
+					if(child.equals(end_point)) {
+						break;
+					}
+					//TO DO CHECK IF END BREAK
+				}
+				if(!current_cell.rightWall) {
+					Point child = new Point(current_point.x, current_point.y+1);
+					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 1};
+					parent_list.add(parent_info);
+					if(child.equals(end_point)) {
+						break;
+					}
+				}
+				if(!current_cell.backWall) {
+					Point child = new Point(current_point.x+1, current_point.y);
+					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 2};
+					parent_list.add(parent_info);
+					if(child.equals(end_point)) {
+						break;
+					}
+				}
+				if(!current_cell.leftWall) {
+					Point child = new Point(current_point.x, current_point.y-1);
+					int[] parent_info = {current_point.x, current_point.y, child.x, child.y, 3};
+					parent_list.add(parent_info);
+					if(child.equals(end_point)) {
+						break;
+					}
+				}
+			}
+		}
+
+		ArrayList<Integer> route = pathConstruct(parent_list, start_point, end_point);
+		return route;
+	}
+
+	private static ArrayList<Integer> pathConstruct(ArrayList<int[]> parent_list, Point start_point, Point end_point) {
+		Point current_point = end_point;
+		ArrayList<Integer> path = new ArrayList<Integer>();
+		
+		while(!current_point.equals(start_point)) {
+			System.out.println("PARENT'S LIST");
+			for(int i = 0; i < parent_list.size(); i++) {
+				int[] currentListItem = parent_list.get(i);
+				
+				// Construct the points from the parent list item (array).
+				Point cur_first = new Point(currentListItem[0],currentListItem[1]);
+				Point cur_second = new Point(currentListItem[2],currentListItem[3]);
+				if (cur_second.equals(current_point)) {
+					path.add(0, currentListItem[4]);	// Add the direction
+					current_point = cur_first;
+					break;
+				}
+			}
+		}
+		
+		return path;
+	}
+	
+	public static void sendPositionDataOnPath(DataOutputStream dataOutputStream) throws IOException {
+		
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		dataOutputStream.writeInt(xPos);
+		dataOutputStream.flush();
+		dataOutputStream.writeInt(yPos);
+		dataOutputStream.flush();
+	}
 }
