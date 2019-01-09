@@ -282,6 +282,7 @@ public class Nba {
 		
 		Point p = new Point(xPos,yPos);
 		turnBackToGreen(dataOutputStream, p, mediumMotor);
+		makeMappingFinishSound();
 	}
 	
 	public static void turnBackToGreen(DataOutputStream dataOutputStream, Point coordinates, EV3MediumRegulatedMotor mediumMotor) throws IOException {
