@@ -60,6 +60,7 @@ public class Nba {
 	// =================================================================
 	public static final int HALF_BLOCK = 12;
 	public static final int FULL_BLOCK = 31;
+	public static final int QUARTER_BLOCK = 6;
 
 	
 	// =================================================================
@@ -135,6 +136,8 @@ public class Nba {
 	static Map map;
 	static boolean isFinished = false;
 	static int ballColor = 0; 	// DEFAULT BALL COLOR IS RED
+	
+	static Utils utils = new Utils();
 	
 	public static void main(String[] args) throws Exception {		
 		EV3 ev3 = (EV3) BrickFinder.getDefault();
@@ -271,8 +274,23 @@ public class Nba {
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
 		
-		goToGetTheBall(dataOutputStream,mediumMotor, map);
+		goToGetTheBall(dataOutputStream, mediumMotor, map);
 		goToDropTheBall(dataOutputStream, mediumMotor, map, ballColor);
+
+		goToGetTheBall(dataOutputStream, mediumMotor, map);
+		goToDropTheBall(dataOutputStream, mediumMotor, map, ballColor);
+		
+		Point p = new Point(xPos,yPos);
+		turnBackToGreen(dataOutputStream, p, mediumMotor);
+	}
+	
+	public static void turnBackToGreen(DataOutputStream dataOutputStream, Point coordinates, EV3MediumRegulatedMotor mediumMotor) throws IOException {
+		int xStart = coordinates.x;
+		int yStart = coordinates.y;
+		
+		sendPositionDataOnPath(dataOutputStream);
+		Point start_point = new Point(xStart,yStart);
+		goFromTo(dataOutputStream, mediumMotor, map, start_point, map.green_coordinates, false, false);
 	}
 	
 	public static void executeMapping(DataOutputStream dataOutputStream, EV3LargeRegulatedMotor ultrasonicSensorMotor) throws IOException {
@@ -371,10 +389,7 @@ public class Nba {
 		return cell;
 	}
 	
-	public static void grabTheBall(GraphicsLCD graphicsLCD, EV3MediumRegulatedMotor middleMotor) {
-		
-		Utils utils = new Utils();
-		
+	public static void grabTheBall(GraphicsLCD graphicsLCD, EV3MediumRegulatedMotor middleMotor) {	
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
@@ -384,23 +399,23 @@ public class Nba {
 		middleMotor.stop();
 		
 		// If it determines the ball's color then updates the static field.
-		ballColor = utils.determineBallColor(graphicsLCD);
+		ballColor = Utils.determineBallColor(graphicsLCD);
 		System.out.println("BALL COLOR IS DETERMINED AS: " + ballColor);
 	}
 	
 	public static void letTheBall(GraphicsLCD graphicsLCD, EV3MediumRegulatedMotor middleMotor) {
-		Utils utils = new Utils();
 		
-		pilot.travel(FULL_BLOCK);	// TODO: This might need to be DECREASED.
+		pilot.travel(QUARTER_BLOCK);	// TODO: This might need to be DECREASED.
 		
-		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
+		/*middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
 		middleMotor.rotate(GRASP_ANGLE);
-		middleMotor.stop();
+		middleMotor.stop();*/
 		
-		// Close the claw again.
+		//Release the claw again.
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
+		pilot.travel(-QUARTER_BLOCK);
 	}
 	
 	public static void sendPositionData(DataOutputStream dataOutputStream, Cell currentCell) throws IOException {
@@ -479,6 +494,8 @@ public class Nba {
 			pilot.rotate(-gyro_value);
 		}
 		gyroSensor.reset();
+		
+		
 	}
 	
 	public static float getGyroSensorValue() {
@@ -799,28 +816,34 @@ public class Nba {
 			sendParticles(particles, dataOutputStream);
 			if(particles.size() > 1){
 				// Robotu ve particlelarý update et hareket edip
-				if(!current_cell.frontWall && (previous_direction!=2)) {
+				System.out.println("Previous: " + previous_direction);
+
+				if(!current_cell.frontWall && (previous_direction!=0)) {
+					System.out.println("Current: " + 2 );
 					changeOrientationAndGoUp();
 					orientation=0;
 					int turnDirection = 0;
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.rightWall && (previous_direction!=3)){
+				else if(!current_cell.rightWall && (previous_direction!=1)){
+					System.out.println("Current: " + 3 );
 					changeOrientationAndGoRight();
 					orientation=0;
 					int turnDirection = 1;
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.backWall && (previous_direction!=0)){
+				else if(!current_cell.backWall && (previous_direction!=2)){
+					System.out.println("Current: " + 0 );
 					changeOrientationAndGoDown();
 					orientation=0;
 					int turnDirection = 2;
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.leftWall && (previous_direction!=1)){
+				else if(!current_cell.leftWall && (previous_direction!=3)){
+					System.out.println("Current: " + 1 );
 					changeOrientationAndGoLeft();
 					orientation=0;
 					int turnDirection = 3;
@@ -1057,22 +1080,31 @@ public class Nba {
 					wallCheck[3] = 0;
 				}
 				
-				if(walls[wallCheck[0]] != particle_cell.frontWall) {
-					System.out.println(" REMOVED FRONT");
+				int probabilities = 4;
+				for(int i=0; i<4;i++) {
+					System.out.println(" PROBABLILITY " + i);
+					if(walls[(wallCheck[0]+i)%4] != particle_cell.frontWall) {
+						System.out.println(" REMOVED FRONT");
+						probabilities --;
+					}
+					else if(walls[(wallCheck[1]+i)%4] != particle_cell.rightWall) {
+						System.out.println(" REMOVED RIGHT");
+						probabilities --;
+					}
+					else if(walls[(wallCheck[2]+i)%4] != particle_cell.backWall) {
+						System.out.println(" REMOVED BACK");
+						probabilities --;
+					}
+					else if(walls[(wallCheck[3]+i)%4] != particle_cell.leftWall) {
+						System.out.println(" REMOVED LEFT");
+						probabilities --;
+					}
+				}
+				if(probabilities == 0) {
 					iterator.remove();
 				}
-				else if(walls[wallCheck[1]] != particle_cell.rightWall) {
-					System.out.println(" REMOVED RIGHT");
-					iterator.remove();
-				}
-				else if(walls[wallCheck[2]] != particle_cell.backWall) {
-					System.out.println(" REMOVED BACK");
-					iterator.remove();
-				}
-				else if(walls[wallCheck[3]] != particle_cell.leftWall) {
-					System.out.println(" REMOVED LEFT");
-					iterator.remove();
-				}
+				
+
 			}
 		}
 		Cell cell = new Cell(colorId, walls);
@@ -1152,50 +1184,72 @@ public class Nba {
 		if (grab_ball) {
 			int lastMovement = route.get(route.size() - 1);
 			if(lastMovement == 0){
-				xPos = xPos - 1;
+				// xPos = xPos - 1;
 				changeOrientationToUpAndTurn();
 			}
 			else if(lastMovement == 1) {
-				yPos = yPos + 1;
+				// yPos = yPos + 1;
 				changeOrientationToRightAndTurn();
 			}
 			else if(lastMovement == 2) {
-				xPos = xPos + 1;
+				// xPos = xPos + 1;
 				changeOrientationToDownAndTurn();
 			}
 			else if(lastMovement == 3) {
-				yPos = yPos - 1;
+				// yPos = yPos - 1;
 				changeOrientationToLeftAndTurn();
 			}
 			
 			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
 			// Then grab the ball
 			grabTheBall(graphicsLCD,mediumMotor);
-		} 
-		
-		if(let_go_ball) {
+		} else if(let_go_ball) {
 			int lastMovement = route.get(route.size() - 1);
 			if(lastMovement == 0){
-				xPos = xPos - 1;
+				// xPos = xPos - 1;
 				changeOrientationToUpAndTurn();
 			}
 			else if(lastMovement == 1) {
-				yPos = yPos + 1;
+				// yPos = yPos + 1;
 				changeOrientationToRightAndTurn();
 			}
 			else if(lastMovement == 2) {
-				xPos = xPos + 1;
+				// xPos = xPos + 1;
 				changeOrientationToDownAndTurn();
 			}
 			else if(lastMovement == 3) {
-				yPos = yPos - 1;
+				// yPos = yPos - 1;
 				changeOrientationToLeftAndTurn();
 			}
 			
 			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
 			// Then let the ball
 			letTheBall(graphicsLCD,mediumMotor);
+		} 
+		// Only entered when turning back to green after basketing.
+		else {
+			sendPositionDataOnPath(dataOutputStream);
+			int lastMovement = route.get(route.size() - 1);
+			
+			if(lastMovement == 0){
+				xPos = xPos - 1;
+				changeOrientationAndGoUp();
+			}
+			else if(lastMovement == 1) {
+				yPos = yPos + 1;
+				changeOrientationAndGoRight();
+			}
+			else if(lastMovement == 2) {
+				xPos = xPos + 1;
+				changeOrientationAndGoDown();
+			}
+			else if(lastMovement == 3) {
+				yPos = yPos - 1;
+				changeOrientationAndGoLeft();
+			}
+			sendPositionDataOnPath(dataOutputStream);
 		}
+		
 		
 		System.out.println("GO FROM TO EXIT");
 
