@@ -946,7 +946,7 @@ public class Nba {
 				current_particle[2] = (current_particle[2] +2) %4;
 				particles.set(i, current_particle);
 			}
-		}		
+		}	
 		for(int i = 0; i < particles.size(); i++) {
 			int [] current_particle = particles.get(i);
 			if(current_particle[2] == 0) {
@@ -961,9 +961,84 @@ public class Nba {
 			}else if(current_particle[2] == 3) {
 				current_particle[1] -= 1;
 				particles.set(i, current_particle);
+				}
 			}
-		}
+	/*
+		if(turnDirection == 0) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				if(current_particle[2] == 0) {
+					current_particle[0] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 1) {
+					current_particle[1] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 2) {
+					current_particle[0] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 3) {
+					current_particle[1] -= 1;
+					particles.set(i, current_particle);
+					}
+				}
+			}
 		
+		else if(turnDirection == 1) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				if(current_particle[2] == 0) {
+					current_particle[1] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 1) {
+					current_particle[0] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 2) {
+					current_particle[1] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 3) {
+					current_particle[0] -= 1;
+					particles.set(i, current_particle);
+					}
+				}
+			}
+		
+		else if(turnDirection == 2) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				if(current_particle[2] == 0) {
+					current_particle[0] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 1) {
+					current_particle[1] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 2) {
+					current_particle[0] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 3) {
+					current_particle[1] += 1;
+					particles.set(i, current_particle);
+					}
+				}
+			}
+		else if(turnDirection == 3) {
+			for(int i = 0; i < particles.size(); i++) {
+				int [] current_particle = particles.get(i);
+				if(current_particle[2] == 0) {
+					current_particle[1] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 1) {
+					current_particle[0] -= 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 2) {
+					current_particle[1] += 1;
+					particles.set(i, current_particle);
+				}else if(current_particle[2] == 3) {
+					current_particle[0] += 1;
+					particles.set(i, current_particle);
+					}
+				}
+			*/
+			
 	}
 	
 	public static Cell exploreParticles(EV3LargeRegulatedMotor ultrasonicSensorMotor,
@@ -1000,10 +1075,10 @@ public class Nba {
 				}
 			}
 			if (wall_readings > 2) {
-				walls[(1 + orientation) % 4] = true;
+				walls[(1 ) % 4] = true;
 			}
 			else {
-				walls[(1 + orientation) % 4] = false;
+				walls[(1 ) % 4] = false;
 			}
 			wall_readings = 0;
 			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);
@@ -1015,10 +1090,10 @@ public class Nba {
 				}
 			}
 			if (wall_readings > 2) {
-				walls[(2 + orientation) % 4] = true;
+				walls[(2 ) % 4] = true;
 			}
 			else {
-				walls[(2 + orientation) % 4] = false;
+				walls[(2 ) % 4] = false;
 			}
 			wall_readings = 0;
 			ultrasonicSensorMotor.rotate(3 * ULTRASONIC_ROTATE_LEFT);
@@ -1030,10 +1105,10 @@ public class Nba {
 				}
 			}
 			if (wall_readings > 2) {
-				walls[(3 + orientation) % 4] = true;
+				walls[(3 ) % 4] = true;
 			}
 			else {
-				walls[(3 + orientation) % 4] = false;
+				walls[(3 ) % 4] = false;
 			}
 			wall_readings = 0;
 			ultrasonicSensorMotor.rotate(ULTRASONIC_ROTATE_RIGHT);			
@@ -1047,13 +1122,71 @@ public class Nba {
 			Cell particle_cell = map.getCellAt(current_particle[0], current_particle[1]);
 			System.out.println(" CURRENT PARTICLE ");
 			System.out.println(current_particle[0] + " " + current_particle[1] + " " + current_particle[2]);
-
+			
 			// Eliminate the particle if the color is wrong.
 			if (particle_cell.colorId !=colorId) {
 				System.out.println(" REMOVED COLOR ");
 				iterator.remove();
 			}
 			else {
+				
+				if(current_particle[2] == 0) {
+					if(walls[0] != particle_cell.frontWall) {
+						iterator.remove();
+					}
+					else if(walls[1] != particle_cell.rightWall){
+						iterator.remove();
+					}
+					else if(walls[2] != particle_cell.backWall){
+						iterator.remove();
+					}
+					else if(walls[3] != particle_cell.leftWall){
+						iterator.remove();
+					}
+				}
+				else if(current_particle[2] == 1) {
+					if(walls[0] != particle_cell.rightWall) {
+						iterator.remove();
+					}
+					else if(walls[1] != particle_cell.backWall){
+						iterator.remove();
+					}
+					else if(walls[2] != particle_cell.leftWall){
+						iterator.remove();
+					}
+					else if(walls[3] != particle_cell.frontWall){
+						iterator.remove();
+					}
+				}
+				else if(current_particle[2] == 2) {
+					if(walls[0] != particle_cell.backWall) {
+						iterator.remove();
+					}
+					else if(walls[1] != particle_cell.leftWall){
+						iterator.remove();
+					}
+					else if(walls[2] != particle_cell.frontWall){
+						iterator.remove();
+					}
+					else if(walls[3] != particle_cell.rightWall){
+						iterator.remove();
+					}
+				}
+				else if(current_particle[2] == 3) {
+					if(walls[0] != particle_cell.leftWall) {
+						iterator.remove();
+					}
+					else if(walls[1] != particle_cell.frontWall){
+						iterator.remove();
+					}
+					else if(walls[2] != particle_cell.rightWall){
+						iterator.remove();
+					}
+					else if(walls[3] != particle_cell.backWall){
+						iterator.remove();
+					}
+				}
+				/*
 				// TODO: Orientationlar ayný olmayabilir.
 				// TODO: 
 				
@@ -1104,7 +1237,7 @@ public class Nba {
 					iterator.remove();
 				}
 				
-
+				 	*/
 			}
 		}
 		Cell cell = new Cell(colorId, walls);
