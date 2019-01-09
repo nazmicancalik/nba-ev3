@@ -127,16 +127,18 @@ public class NbaPc extends JFrame {
 	
 	public static void receiveGoToBallInfo(DataInputStream dataInputStream) throws IOException {
 		System.out.println("Go to ball behavior is starting...");
-
+		
 		current_mod = dataInputStream.readInt();
 		System.out.println("Current Mode " + current_mod);
 
 		if (current_mod != GO_TO_BALL_MODE) {
 			return;
 		}
-		
 		xPos = dataInputStream.readInt();
+		System.out.println(xPos);
 		yPos = dataInputStream.readInt();
+		System.out.println(yPos);
+		System.out.println(".................");
 	}
 	
 	public static void receiveParticlesInfo(DataInputStream dataInputStream) throws IOException {
@@ -162,7 +164,8 @@ public class NbaPc extends JFrame {
 			particle[0] = xCoordinate;
 			particle[1] = yCoordinate;
 			particle[2] = orientation;
-			
+			System.out.println(xCoordinate);
+			System.out.println(yCoordinate);
 			particles.add(particle);
 			isFinished = dataInputStream.readBoolean();
 		}
