@@ -20,6 +20,7 @@ import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.EV3;
 import lejos.hardware.lcd.GraphicsLCD;
+import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -156,6 +157,7 @@ public class Nba {
     	EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.B);
     	EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
     	EV3LargeRegulatedMotor ultrasonicSensorMotor = new EV3LargeRegulatedMotor(MotorPort.A);
+    	EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
     	
     	float leftWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.72"));
     	float rightWheelDiameter = Float.parseFloat(pilotProps.getProperty(PilotProps.KEY_WHEELDIAMETER, "5.28"));
@@ -189,14 +191,15 @@ public class Nba {
 		
 		OutputStream outputStream = client.getOutputStream();
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-		Button.waitForAnyPress();
 		
 		while(!isFinished) {
 			int buttonId = Button.readButtons();
-			if ( buttonId != Button.ID_UP && !isFinished) {
-				executeMappingAndLocalization(dataOutputStream,ultrasonicSensorMotor);
-			} else if (buttonId != Button.ID_DOWN && !isFinished) {
-				executeTaskExecution(dataOutputStream);
+			if ( buttonId == Button.ID_UP && !isFinished) {
+				System.out.println("Mapping and Localization is starting...");
+				executeMapping(dataOutputStream,ultrasonicSensorMotor);
+			} else if (buttonId == Button.ID_DOWN && !isFinished) {
+				System.out.println("Task execution is starting...");
+				executeTaskExecution(dataOutputStream, middleMotor ,ultrasonicSensorMotor);
 			} 
 		}
 		
@@ -246,30 +249,7 @@ public class Nba {
 		
 	}
 	
-	public static void executeTaskExecution(DataOutputStream dataOutputStream) throws IOException {
-		
-		// Go to Ball
-		current_mod = GO_TO_BALL_MODE;
-		dataOutputStream.writeInt(current_mod);
-		dataOutputStream.flush();
-		
-		goToGetTheBall(dataOutputStream, map);
-		goToDropTheBall(dataOutputStream, map, ballColor);
-	}
-	
-	public static void executeMappingAndLocalization(DataOutputStream dataOutputStream, EV3LargeRegulatedMotor ultrasonicSensorMotor) throws IOException {
-		
-		// MAPPING
-		current_mod = MAPPING_MODE;
-		
-		dataOutputStream.writeInt(current_mod);
-		dataOutputStream.flush();
-		System.out.println(map.toString());
-		map = dfs(ultrasonicSensorMotor, dataOutputStream);
-		map.writeObjectToFile(filepath);
-		System.out.println(map.toString());
-		
-		makeMappingFinishSound();
+	public static void executeTaskExecution(DataOutputStream dataOutputStream, EV3MediumRegulatedMotor mediumMotor,EV3LargeRegulatedMotor ultrasonicSensorMotor) throws IOException {
 		
 		// LOCALIZATION
 		current_mod = LOCALIZATION_MODE;
@@ -285,6 +265,29 @@ public class Nba {
 		graphicsLCD.refresh();
 		
 		localize(ultrasonicSensorMotor, dataOutputStream, map);
+		
+		// Go to Ball
+		current_mod = GO_TO_BALL_MODE;
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		
+		goToGetTheBall(dataOutputStream,mediumMotor, map);
+		goToDropTheBall(dataOutputStream, mediumMotor, map, ballColor);
+	}
+	
+	public static void executeMapping(DataOutputStream dataOutputStream, EV3LargeRegulatedMotor ultrasonicSensorMotor) throws IOException {
+		
+		// MAPPING
+		current_mod = MAPPING_MODE;
+		
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		System.out.println(map.toString());
+		map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		map.writeObjectToFile(filepath);
+		System.out.println(map.toString());
+		
+		makeMappingFinishSound();
 	}
 	
 	public static void makeMappingFinishSound() {
@@ -368,15 +371,15 @@ public class Nba {
 		return cell;
 	}
 	
-	public static void grabTheBall(GraphicsLCD graphicsLCD) {
-		EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
+	public static void grabTheBall(GraphicsLCD graphicsLCD, EV3MediumRegulatedMotor middleMotor) {
+		
 		Utils utils = new Utils();
 		
 		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
 		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
-		pilot.travel(HALF_BLOCK);	// TODO: This might need to be increased.
+		pilot.travel(FULL_BLOCK);	// TODO: This might need to be increased.
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
 		
@@ -385,11 +388,11 @@ public class Nba {
 		System.out.println("BALL COLOR IS DETERMINED AS: " + ballColor);
 	}
 	
-	public static void letTheBall(GraphicsLCD graphicsLCD) {
-		EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
+	public static void letTheBall(GraphicsLCD graphicsLCD, EV3MediumRegulatedMotor middleMotor) {
 		Utils utils = new Utils();
 		
-		pilot.travel(HALF_BLOCK);	// TODO: This might need to be DECREASED.
+		pilot.travel(FULL_BLOCK);	// TODO: This might need to be DECREASED.
+		
 		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
@@ -1076,7 +1079,7 @@ public class Nba {
 		return cell;
 	}	
 	
-	public static void goToGetTheBall(DataOutputStream dataOutputStream, Map map) throws IOException {
+	public static void goToGetTheBall(DataOutputStream dataOutputStream,EV3MediumRegulatedMotor mediumMotor,Map map) throws IOException {
 		System.out.println("GO TO GRAB BALL ENTERED");
 		
 		Point end_point = map.green_coordinates;
@@ -1086,11 +1089,11 @@ public class Nba {
 		boolean grab_ball = true;
 		boolean let_go_ball = false;
 		
-		goFromTo(dataOutputStream, map, start_point, end_point, grab_ball, let_go_ball);
+		goFromTo(dataOutputStream, mediumMotor ,map, start_point, end_point, grab_ball, let_go_ball);
 		System.out.println("GO TO GRAB BALL EXIT");
 	}
 	
-	public static void goToDropTheBall(DataOutputStream dataOutputStream, Map map, int ballColor) throws IOException {
+	public static void goToDropTheBall(DataOutputStream dataOutputStream, EV3MediumRegulatedMotor mediumMotor, Map map, int ballColor) throws IOException {
 		System.out.println("GO TO DROP BALL ENTERED");
 		
 		Point end_point;
@@ -1108,11 +1111,12 @@ public class Nba {
 		boolean grab_ball = false;
 		boolean let_go_ball = true;
 		
-		goFromTo(dataOutputStream, map, start_point, end_point, grab_ball, let_go_ball);
+		goFromTo(dataOutputStream,mediumMotor, map, start_point, end_point, grab_ball, let_go_ball);
 		System.out.println("GO TO DROP BALL EXIT");
 	}
 	
 	public static void goFromTo(DataOutputStream dataOutputStream,
+			EV3MediumRegulatedMotor mediumMotor,
 			Map map,
 			Point start_point,
 			Point end_point,
@@ -1166,7 +1170,7 @@ public class Nba {
 			
 			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
 			// Then grab the ball
-			grabTheBall(graphicsLCD);
+			grabTheBall(graphicsLCD,mediumMotor);
 		} 
 		
 		if(let_go_ball) {
@@ -1190,7 +1194,7 @@ public class Nba {
 			
 			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
 			// Then let the ball
-			letTheBall(graphicsLCD);
+			letTheBall(graphicsLCD,mediumMotor);
 		}
 		
 		System.out.println("GO FROM TO EXIT");
