@@ -43,7 +43,7 @@ public class NbaPc extends JFrame {
 	public static final Color WALL_COLOR = Color.YELLOW;
 	public static final Color BACKGROUND_COLOR = Color.GRAY;
 	public static final Color STRIPE_COLOR = Color.DARK_GRAY;
-	public static final Color PARTICLE_COLOR = Color.GREEN;
+	public static final Color PARTICLE_COLOR = Color.MAGENTA;
 	
 	public static final int MAPPING_MODE = 0;
 	public static final int LOCALIZATION_MODE = 1;
