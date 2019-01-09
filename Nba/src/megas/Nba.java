@@ -126,14 +126,20 @@ public class Nba {
 	public static final int GO_TO_BALL_MODE = 2;
 
 	static int current_mod = MAPPING_MODE; // mapping
-
+	
 
 	static MovePilot pilot;
 	static GraphicsLCD graphicsLCD;
 
+	static Map map;
+	static boolean isFinished = false;
+	static int ballColor = 0; 	// DEFAULT BALL COLOR IS RED
+	
 	public static void main(String[] args) throws Exception {		
 		EV3 ev3 = (EV3) BrickFinder.getDefault();
 		graphicsLCD = ev3.getGraphicsLCD();
+		
+		map = new Map();
 		
 		graphicsLCD.clear();
 		graphicsLCD.drawString("Nba", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
@@ -185,6 +191,14 @@ public class Nba {
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 		Button.waitForAnyPress();
 		
+		while(!isFinished) {
+			int buttonId = Button.readButtons();
+			if ( buttonId != Button.ID_UP && !isFinished) {
+				executeMappingAndLocalization(dataOutputStream,ultrasonicSensorMotor);
+			} else if (buttonId != Button.ID_DOWN && !isFinished) {
+				executeTaskExecution(dataOutputStream);
+			} 
+		}
 		
 		/*
 		// ============ MAP MAKING ============ 
@@ -203,9 +217,10 @@ public class Nba {
 		Button.waitForAnyPress();
 		*/
 		
+		/*
 		// ============ LOCALIZATION ============ 
 		current_mod = LOCALIZATION_MODE;
-		Map map = new Map();
+		
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
 		map = map.ReadObjectFromFile(filepath);
@@ -215,19 +230,67 @@ public class Nba {
 		graphicsLCD.drawString("MAP IS LOADED", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 		graphicsLCD.refresh();
 		localize(ultrasonicSensorMotor, dataOutputStream, map);
+		*/
 		
-		
-		
+		/*
 		// ============= GO TO BALL =============
 		current_mod = GO_TO_BALL_MODE;
 		dataOutputStream.writeInt(current_mod);
 		dataOutputStream.flush();
 		
 		goToBall(dataOutputStream, map);
+		*/
 		dataOutputStream.close();
 		serverSocket.close();
 		
 		
+	}
+	
+	public static void executeTaskExecution(DataOutputStream dataOutputStream) throws IOException {
+		
+		// Go to Ball
+		current_mod = GO_TO_BALL_MODE;
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		
+		goToGetTheBall(dataOutputStream, map);
+		goToDropTheBall(dataOutputStream, map, ballColor);
+	}
+	
+	public static void executeMappingAndLocalization(DataOutputStream dataOutputStream, EV3LargeRegulatedMotor ultrasonicSensorMotor) throws IOException {
+		
+		// MAPPING
+		current_mod = MAPPING_MODE;
+		
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		System.out.println(map.toString());
+		map = dfs(ultrasonicSensorMotor, dataOutputStream);
+		map.writeObjectToFile(filepath);
+		System.out.println(map.toString());
+		
+		makeMappingFinishSound();
+		
+		// LOCALIZATION
+		current_mod = LOCALIZATION_MODE;
+		
+		dataOutputStream.writeInt(current_mod);
+		dataOutputStream.flush();
+		map = map.ReadObjectFromFile(filepath);
+		System.out.println(map.toString());
+		sendMap(dataOutputStream, map);
+		
+		graphicsLCD.clear();
+		graphicsLCD.drawString("MAP IS LOADED", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
+		graphicsLCD.refresh();
+		
+		localize(ultrasonicSensorMotor, dataOutputStream, map);
+	}
+	
+	public static void makeMappingFinishSound() {
+		Sound.playTone(500, 500);
+		Sound.playTone(500, 500);
+		Sound.playTone(500, 500);
 	}
 	
 	public static Cell explore(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream) throws IOException{
@@ -301,7 +364,6 @@ public class Nba {
 		Cell cell = new Cell(colorId, walls);
 		
 		// Send the cell data to draw the map
-		
 		sendPositionData(dataOutputStream, cell);
 		return cell;
 	}
@@ -314,11 +376,28 @@ public class Nba {
 		middleMotor.rotate(RELEASE_ANGLE);
 		middleMotor.stop();
 		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
-		pilot.travel(HALF_BLOCK);
+		pilot.travel(HALF_BLOCK);	// TODO: This might need to be increased.
 		middleMotor.rotate(GRASP_ANGLE);
 		middleMotor.stop();
 		
-		utils.determineBallColor(graphicsLCD);
+		// If it determines the ball's color then updates the static field.
+		ballColor = utils.determineBallColor(graphicsLCD);
+		System.out.println("BALL COLOR IS DETERMINED AS: " + ballColor);
+	}
+	
+	public static void letTheBall(GraphicsLCD graphicsLCD) {
+		EV3MediumRegulatedMotor middleMotor = new EV3MediumRegulatedMotor(MotorPort.C);
+		Utils utils = new Utils();
+		
+		pilot.travel(HALF_BLOCK);	// TODO: This might need to be DECREASED.
+		middleMotor.setSpeed(MIDDLE_MOTOR_SLOW_SPEED);
+		middleMotor.rotate(GRASP_ANGLE);
+		middleMotor.stop();
+		
+		// Close the claw again.
+		middleMotor.setSpeed(MIDDLE_MOTOR_SPEED);
+		middleMotor.rotate(RELEASE_ANGLE);
+		middleMotor.stop();
 	}
 	
 	public static void sendPositionData(DataOutputStream dataOutputStream, Cell currentCell) throws IOException {
@@ -501,11 +580,9 @@ public class Nba {
 			} 
 			else if (current_cell.colorId == 0){ //RED
 				map.red_coordinates = new Point(current_coordinates.x, current_coordinates.y);
-
 			}
 			else if (current_cell.colorId == 2){ //BLUE
 				map.blue_coordinates = new Point(current_coordinates.x, current_coordinates.y);
-
 			}
 			map.addCell(current_cell, current_coordinates.x, current_coordinates.y);
 			if (current_cell.colorId != 7) {
@@ -537,10 +614,7 @@ public class Nba {
 				goForward(-FULL_BLOCK);
 				traversed_directions.pop();
 				current_coordinates = prev_coordinates;
-				
 			}
-
-
 		}
 		return map;
 	}
@@ -633,6 +707,71 @@ public class Nba {
 		orientation = 3;
 	}
 	
+	// This method is used for only the last movement of the route to grab or leave the ball
+	public static void changeOrientationToUpAndTurn() {
+		if(orientation==1) {
+			turnLeft();
+		}
+		else if(orientation==2) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==3) {
+			turnRight();
+		}
+		
+		orientation = 0;
+	}
+	
+	// This method is used for only the last movement of the route to grab or leave the ball
+	public static void changeOrientationToDownAndTurn() {
+		if(orientation==3) {
+			turnLeft();
+		}
+		else if(orientation==0) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==1) {
+			turnRight();
+		}
+		
+		orientation = 2;
+
+	}
+	
+	// This method is used for only the last movement of the route to grab or leave the ball
+	public static void changeOrientationToRightAndTurn() {
+		if(orientation==2) {
+			turnLeft();
+		}
+		else if(orientation==3) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==0) {
+			turnRight();
+		}
+
+		orientation = 1;
+	}
+	
+	// This method is used for only the last movement of the route to grab or leave the ball
+	public static void changeOrientationToLeftAndTurn() {
+		if(orientation==0) {
+			turnLeft();
+		}
+		else if(orientation==1) {
+			turnRight();
+			turnRight();
+		}
+		else if(orientation==2) {
+			turnRight();
+		}
+		
+		orientation = 3;
+	}
+	
 	public static void localize(EV3LargeRegulatedMotor ultrasonicSensorMotor, DataOutputStream dataOutputStream, Map map) throws IOException {
 		orientation = 0;
 		System.out.println(" LOCALIZATION STARTS ");
@@ -664,21 +803,21 @@ public class Nba {
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.rightWall&& (previous_direction!=3)){
+				else if(!current_cell.rightWall && (previous_direction!=3)){
 					changeOrientationAndGoRight();
 					orientation=0;
 					int turnDirection = 1;
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.backWall&& (previous_direction!=0)){
+				else if(!current_cell.backWall && (previous_direction!=0)){
 					changeOrientationAndGoDown();
 					orientation=0;
 					int turnDirection = 2;
 					moveParticles(particles, turnDirection);
 					previous_direction = turnDirection;
 				}
-				else if(!current_cell.leftWall&& (previous_direction!=1)){
+				else if(!current_cell.leftWall && (previous_direction!=1)){
 					changeOrientationAndGoLeft();
 					orientation=0;
 					int turnDirection = 3;
@@ -937,17 +1076,40 @@ public class Nba {
 		return cell;
 	}	
 	
-	public static void goToBall(DataOutputStream dataOutputStream, Map map) throws IOException {
-		System.out.println("GO TO BALL ENTERED");
+	public static void goToGetTheBall(DataOutputStream dataOutputStream, Map map) throws IOException {
+		System.out.println("GO TO GRAB BALL ENTERED");
+		
 		Point end_point = map.green_coordinates;
 		System.out.println("xPos: " + xPos);
 		System.out.println("yPos: " + yPos);
 		Point start_point = new Point(xPos, yPos);
 		boolean grab_ball = true;
 		boolean let_go_ball = false;
+		
 		goFromTo(dataOutputStream, map, start_point, end_point, grab_ball, let_go_ball);
-		System.out.println("GO TO BALL EXIT");
+		System.out.println("GO TO GRAB BALL EXIT");
+	}
+	
+	public static void goToDropTheBall(DataOutputStream dataOutputStream, Map map, int ballColor) throws IOException {
+		System.out.println("GO TO DROP BALL ENTERED");
+		
+		Point end_point;
+		
+		// Determine where to go
+		if (ballColor == Utils.BLUE_BALL_CODE) {
+			end_point = map.blue_coordinates;	
+		} else {
+			end_point = map.red_coordinates;	
+		}
 
+		System.out.println("xPos: " + xPos);
+		System.out.println("yPos: " + yPos);
+		Point start_point = new Point(xPos, yPos);
+		boolean grab_ball = false;
+		boolean let_go_ball = true;
+		
+		goFromTo(dataOutputStream, map, start_point, end_point, grab_ball, let_go_ball);
+		System.out.println("GO TO DROP BALL EXIT");
 	}
 	
 	public static void goFromTo(DataOutputStream dataOutputStream,
@@ -959,27 +1121,76 @@ public class Nba {
 		System.out.println("GO FROM TO ENTER");
 
 		ArrayList<Integer> route = pathFinder(map, start_point, end_point);
-		for(int i = 0; i<route.size(); i++) {
+		for(int i = 0; i < route.size() - 1; i++) { 	// TODO: Could be wrong because I don't go to the last point but I need to turn towards it.
 			
 			sendPositionDataOnPath(dataOutputStream);
 			
-			if(route.get(i)==0){
+			if(route.get(i) == 0){
 				xPos = xPos - 1;
 				changeOrientationAndGoUp();
 			}
-			else if(route.get(i)==1) {
+			else if(route.get(i) == 1) {
 				yPos = yPos + 1;
 				changeOrientationAndGoRight();
 			}
-			else if(route.get(i)==2) {
+			else if(route.get(i) == 2) {
 				xPos = xPos + 1;
 				changeOrientationAndGoDown();
 			}
-			else if(route.get(i)==3) {
+			else if(route.get(i) == 3) {
 				yPos = yPos - 1;
 				changeOrientationAndGoLeft();
 			}
 			sendPositionDataOnPath(dataOutputStream);
+		}
+		
+		// Solve the problem here: Either grab the ball or leave it.
+		if (grab_ball) {
+			int lastMovement = route.get(route.size() - 1);
+			if(lastMovement == 0){
+				xPos = xPos - 1;
+				changeOrientationToUpAndTurn();
+			}
+			else if(lastMovement == 1) {
+				yPos = yPos + 1;
+				changeOrientationToRightAndTurn();
+			}
+			else if(lastMovement == 2) {
+				xPos = xPos + 1;
+				changeOrientationToDownAndTurn();
+			}
+			else if(lastMovement == 3) {
+				yPos = yPos - 1;
+				changeOrientationToLeftAndTurn();
+			}
+			
+			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
+			// Then grab the ball
+			grabTheBall(graphicsLCD);
+		} 
+		
+		if(let_go_ball) {
+			int lastMovement = route.get(route.size() - 1);
+			if(lastMovement == 0){
+				xPos = xPos - 1;
+				changeOrientationToUpAndTurn();
+			}
+			else if(lastMovement == 1) {
+				yPos = yPos + 1;
+				changeOrientationToRightAndTurn();
+			}
+			else if(lastMovement == 2) {
+				xPos = xPos + 1;
+				changeOrientationToDownAndTurn();
+			}
+			else if(lastMovement == 3) {
+				yPos = yPos - 1;
+				changeOrientationToLeftAndTurn();
+			}
+			
+			sendPositionDataOnPath(dataOutputStream); // This might be problematic.
+			// Then let the ball
+			letTheBall(graphicsLCD);
 		}
 		
 		System.out.println("GO FROM TO EXIT");

@@ -13,6 +13,9 @@ public class Utils {
 	// =================================================================			
 	public static final double BLUE_BALL_THRESHOLD = 0.37;
 	
+	public static final int BLUE_BALL_CODE = 1;
+	public static final int RED_BALL_CODE = 0;
+	
 	// =================================================================
 	// ========================== ENUMS ================================
 	// =================================================================		
@@ -31,17 +34,19 @@ public class Utils {
     	nxtLightDetectorAdaptor.setReflected(true);
 	}
 	
-	public static void determineBallColor(GraphicsLCD graphicsLCD) {
+	public static int determineBallColor(GraphicsLCD graphicsLCD) {
 		
 		double reading = nxtLightDetectorAdaptor.getLightValue();
 		if (reading < BLUE_BALL_THRESHOLD) {
 			graphicsLCD.clear();
 			graphicsLCD.drawString("BLUE BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 			graphicsLCD.refresh();
+			return BLUE_BALL_CODE;
 		} else {
 			graphicsLCD.clear();
 			graphicsLCD.drawString("RED BALL", graphicsLCD.getWidth()/2, 0, GraphicsLCD.VCENTER|GraphicsLCD.HCENTER);
 			graphicsLCD.refresh();
+			return RED_BALL_CODE;
 		}
 	}
 }
