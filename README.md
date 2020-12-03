@@ -1,6 +1,6 @@
 # Cmpe 434 Robotics Final Project
 ## Task
-- Map the maze
+- SLAM Problem, Map the maze and localize itself simultaneously with particle localization algorithm.
 - Kidnapping scenario followed with Localization
 - Take the ball from green square to the rim.
 - Get the second ball and score point again
